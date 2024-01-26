@@ -1,0 +1,13 @@
+flask
+flask-socketio
+openai
+pytest
+bs
+beautifulsoup4
+langchain
+unstructured
+chromadb
+tiktoken
+cohere
+elasticsearch
+sentence_transformers

@@ -1,0 +1,215 @@
+This data is webscraped from: https://itconsortiumgh.com/our-services/
+
+
+
+
+
+
+ 
+
+Our Services - ITConsortium
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+Home
+About us
+Products & Services
+Our Clients
+Contact Us
+
+
+ Menu
+
+Home
+About us
+Products & Services
+Our Clients
+Contact Us
+
+
+
+
+
+
+
+
+
+What we doFinancial Services TechnologyIT Consortium is one of Africa’s leading financial services technology solutions provider. Our mission is simple: To provide innovative systems that bring obvious value to our patrons. We adapt technology to create systems that provide clear competitive advantages to our customers. At IT Consortium, we strictly adhere to high ethical standards and exhibit pure dedication to excellence in all operational aspects.
+Read More
+Product IdeationWith several years of experience working with so many clients and architecting various enterprise solutions, we are excited about helping you find a clear path in your current or and new challenges. We have a team of system engineers, strategists and security personnel whose collective wisdom might just be what you need to run a successful enterprise. 
+Payment AggregationOne of the great values we provide our clients is the ability, from a single interface, to access information on payments that where received across banks, mobile wallets, ATMs, etc. Additionally, with just one instruction merchants can make available data on their products or clients to the customer touch-points to enable payments.
+Technology for Educational institutionsUniversities, polytechnics and other tertiary institutions as well as pre-tertiary institutions have used our school management platform for years in tracking the lifecycle of students from admissions to graduation. The integrated payments modules makes fee payments  a breeze.
+Enabling International RemittancesWe connect Money Transfer Organisations (MTOs) Aggregators across the world enabling termination across mobile networks and bank accounts.
+With Transflow as the backboneOur ProductsMOBILE BANKINGThis brings to the bank’s client the convenience to perform a defined set of banking operations from their mobile phone. It runs on USSD and works on any type of phone. Request for Statement, stop cheque, cheque book and account balance is possible. Funds transfer, bill payments, airtime purchases, account opening initiation can also be done by the client.
+DEBIT ORDERThis is a solution allows a merchant’s client to create a mandate, and when the mandate is approved, its sent to the bank for it to be authorized. Upon authorization, the client’s account is then debited. A client can request to create a new mandate, amend an existing mandate and cancel a mandate. After the creation of the mandate, the system automatically generate the next mandate for execution without any human intervention.
+SCHOOL FEESThrough our platform, educational institutions can load student bills and receive fee payments across multiple channels with the ability to have a central place where all payment records are properly curated.
+FIDELITY Y'ELLO SAVEA savings product on Mobile Money with Fidelity Bank. Customer accounts are created on the fly using their KYC from MTN, and interest is calculated daily. Yello save accounts are accessible exclusively on Mobile Money.
+FONN & PAYToo busy to type out things and fill up forms, just call when you have received a bill prompt and you can pay for your bill. It’s that simple with Fonn & Pay.
+MOBILE TELLERThis is a solution that enables the bank’s teller to perform banking services at the doorstep of the customer. Funds hit accounts in core banking instantly, receipts are given instantly, and the collectors and amounts are tracked. Other modules available are Account Opening, Disbursement and Bill Payments. This solution can be used for Agency Banking.
+OASISOASIS is an online student Information management service for pre-tertiary institutions.
+GENERAL PAYMENTSAn aggregation and settlement platform for merchants across mobile money platforms.
+OSISOSIS is our online student information System. It handles document management, Payments, Grading, Graduation and Registration Enrollment.
+CARDLESS ATMSThis enables bank customers to initiate and execute an ATM cash withdrawal without a card and also allow non bank accounts holder to withdraw money using a token.
+UNIWALLET APIAn aggregation API for developers to have access to all the mobile money wallets in the country
+Interested in our services now?Get in touch and one of our customer service representatives will get to you shortly.Contact Us 
+
+
+
+
+
+
+
+© 2021 IT Consortium. All Rights Reserved 
+
+
+
+
+
+
+
+
+
+
+Facebook-f
+ 
+
+
+
+Twitter
+ 
+
+
+
+Linkedin
+ 
+
+
+
+Instagram
+ 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

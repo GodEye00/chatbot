@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat with Lucy</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.1.4/dist/tailwind.min.css" rel="stylesheet">
+    <link href="../static/css/chat.css" rel="stylesheet">
+    <script src="https://cdn.socket.io/socket.io-4.0.0.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const socket = io('http://localhost:5000'); // Make sure this matches your server
+
+            socket.on('connect', () => {
+                alert("Connected!!!!!")
+                console.log('Connected to the server.');
+            });
+
+            socket.on('chat', data => {
+                const message = data.message;
+                displayMessage('Lucy', message);
+            });
+
+            socket.on('typing_indicator', data => {
+                const typingIndicator = document.getElementById('typingIndicator');
+                if (data.status) {
+                    typingIndicator.style.display = 'flex';
+                } else {
+                    typingIndicator.style.display = 'none';
+                }
+            });
+
+            const sendMessage = () => {
+                const messageInput = document.getElementById('messageInput');
+                const message = messageInput.value;
+                socket.emit('message_from_client', { type: 'text', message: message });
+                displayMessage('You', message);
+                messageInput.value = '';
+            };
+
+            const sendFile = () => {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+                if (file) {
+                    // Implement file sending functionality here
+                    displayMessage('You', `Sent file: ${file.name}`);
+                }
+            };
+
+            const displayMessage = (sender, message) => {
+                const chatWindow = document.getElementById('chatWindow');
+                const messageDiv = document.createElement('div');
+                messageDiv.textContent = `${sender}: ${message}`;
+                chatWindow.appendChild(messageDiv);
+            };
+
+            document.getElementById('sendButton').addEventListener('click', sendMessage);
+            document.getElementById('sendFileButton').addEventListener('click', sendFile);
+            document.getElementById('recordButton').addEventListener('click', () => {
+                // Implement audio recording functionality here
+            });
+        });
+    </script>
+</head>
+<body class="bg-gray-100 h-screen">
+    <div class="container mx-auto p-6">
+        <div class="bg-white rounded shadow">
+            <div class="border-b p-3">
+                <p class="text-lg font-bold">Chat with Lucy</p>
+            </div>
+            <div id="chatWindow" class="p-3 h-96 overflow-y-auto">
+                <!-- Messages will be displayed here -->
+            </div>
+            <div id="typingIndicator" class="flex justify-center items-center space-x-1 py-2" style="display: none;">
+                <div class="bounce1 bg-blue-500 h-2 w-2 rounded-full"></div>
+                <div class="bounce2 bg-blue-500 h-2 w-2 rounded-full"></div>
+                <div class="bounce3 bg-blue-500 h-2 w-2 rounded-full"></div>
+            </div>
+            
+            <div class="p-3 flex items-center">
+                <input type="text" id="messageInput" class="border p-2 w-full rounded mr-2" placeholder="Type your message...">
+                <button id="sendButton" class="p-2 rounded bg-blue-500 text-white">Send</button>
+                <input type="file" id="fileInput" class="p-2 ml-2">
+                <button id="sendFileButton" class="p-2 ml-2 rounded bg-green-500 text-white">Send File</button>
+                <button id="recordButton" class="p-2 ml-2 rounded bg-red-500 text-white">Record</button>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
