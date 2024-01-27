@@ -24,7 +24,7 @@ Before running the application, ensure you have the following installed:
 
 1. Clone the repository:
    ```bash
-   git clone [https://github.com/GodEye00/chatbot.git]
+   git clone https://github.com/GodEye00/chatbot.git
    ```
 2. Install the required Python packages:
    ```bash
@@ -81,6 +81,6 @@ Feel free to fork the repository and submit pull requests.
 
 ## License
 
-[[MIT](https://github.com/GodEye00/chatbot#)https://github.com/GodEye00/chatbot#]
+[MIT](https://github.com/GodEye00/chatbot#)https://github.com/GodEye00/chatbot#
 
 ---
