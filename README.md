@@ -2,11 +2,11 @@
 
 # Flask Chatbot Application with WebSockets
 
-This Flask application provides a web service for handling chat communications using WebSockets, along with file processing and Elasticsearch indexing capabilities. It leverages Flask-SocketIO for real-time communication and integrates Python logging for efficient debugging and monitoring.
+This Flask application provides a web service for handling chat communications with llm models like gpt-4 and gpt-3.5-turbo using WebSockets, along with file processing and Elasticsearch indexing capabilities. It leverages Flask-SocketIO for real-time communication and integrates Python logging for efficient debugging and monitoring.
 
 ## Features
 
-- Real-time chat communication using Flask-SocketIO for communicating with various chat llm models like gpt-4.
+- Real-time chat communication using Flask-SocketIO for communicating with various chat models.
 - File upload and processing supporting `.txt`, `.pdf`, `.docx`, and `.zip` formats.
 - Text chunking using transformer models like BERT and Longformer.
 - Integration with Elasticsearch for indexing processed data.
