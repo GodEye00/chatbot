@@ -1,37 +1,41 @@
 import pandas as pd
 from openai import OpenAI
-import numpy as np
+from flask import current_app
+import threading
 
+from ..utils.write_to_file import write
 client = OpenAI()
 
-# Loading the passage_metadata.csv file
-passage_metadata_df = pd.read_csv('../docs/output.csv')
+file_name = 'output_emb'
 
-# initializing an empty list to store passage metadata and embeddings 
-passage_emb_duo = []
-
-def get_embedding(text, model="text-embedding-ada-002"):
-   text = text.replace("\n", " ")
-   return client.embeddings.create(input = [text], model=model).data[0].embedding
-
-# Generating embeddings for every passage in the passage_metadata
-for index, row in passage_metadata_df.iterrows():
-    passage = row['Passage']
+def get_embedding_with_error_check(passage, index, model="text-embedding-ada-002"):
+    try:
+        text = passage.replace("\n", " ")
+        return client.embeddings.create(input = [text], model=model).data[0].embedding
+    except Exception as e:
+        current_app.logger.exception(f"Skipping passage at index {index} due to error in embedding retrieval: {e}")
+        return None
     
-    # Generating embeddings for the passage
-    passage_embedding = get_embedding(passage)
-    
-    # Append only if embedding is successfully retrieved
-    if passage_embedding is not None:
-        passage_emb_duo.append({
-            'Passage': passage,
-            'Embedding': passage_embedding,
-        })
-    else:
-        print(f"Skipping passage at index {index} due to error in embedding retrieval.")
+def perform_embedding(passage):
+    current_app.logger.info("About to start performing embedding")
+    passage_emb_duo = []
 
-# Creating a DataFrame from the duo
-passage_metadata_emb_df = pd.DataFrame(passage_emb_duo)
+    if isinstance(passage, list):
+        # Assuming passage_metadata_df is defined elsewhere and accessible
+        passage_emb_duo.extend([
+            {'Passage': row, 'Embedding': get_embedding_with_error_check(row, index)}
+            for index, row in enumerate(passage)
+            if get_embedding_with_error_check(row, index) is not None
+        ])
 
-# Writing the results to passage_metadata_emb.csv
-passage_metadata_emb_df.to_csv('../docs/output_emb.csv', index=False)
+    elif isinstance(passage, pd.DataFrame):
+        # Apply embedding function across the DataFrame
+        passage_emb_duo['Embedding'] = passage['Passage'].apply(
+            lambda text: get_embedding_with_error_check(text, passage_emb_duo.index)
+        )
+        # Filter out rows where embedding retrieval failed
+        passage_emb_duo = passage_emb_duo.dropna(subset=['Embedding'])
+    # Start the thread to write to CSV, without waiting for it to finish
+    thread = threading.Thread(target=write, args=(passage_emb_duo, 'csv', file_name))
+    thread.start()
+    return passage_emb_duo

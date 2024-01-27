@@ -1,3 +1,4 @@
+
 import requests
 from bs4 import BeautifulSoup
 from urllib.parse import urlparse
@@ -65,4 +66,4 @@ for link in all_links:
     filename = safe_filename(link) + ".txt"
     file_path = os.path.join("extracted_pages", filename)
     with open(file_path, 'w', encoding='utf-8') as file:
-        file.write(f"This data is webscraped from: {link}\n\n\n"+page_data)
+        file.write(f"Data scraped from: {link}\n\n\n"+page_data)

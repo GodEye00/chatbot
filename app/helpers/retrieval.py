@@ -2,6 +2,7 @@ from elasticsearch import Elasticsearch
 import pandas as pd
 import os
 from openai import OpenAI
+from flask import current_app
 
 client = OpenAI()
 
@@ -11,12 +12,6 @@ es = Elasticsearch(
     api_key=os.environ.get('ELASTICSEARCH_API_KEY'),
     request_timeout=30,
 )
-# Load the SentenceTransformer model 
-# model = SentenceTransformer('all-mpnet-base-v2')
-
-def get_embedding(text, model="text-embedding-ada-002"):
-   text = text.replace("\n", " ")
-   return client.embeddings.create(input = [text], model=model).data[0].embedding
 
 # Load the user queries 
 user_queries = [
@@ -25,19 +20,14 @@ user_queries = [
     "What is transflow used for?"
 ]
 
-def retrievePassages(user_queries = user_queries):
-    print("About to retrieve passages for queries", user_queries)
+def get_embedding(text, model="text-embedding-ada-002"):
+   text = text.replace("\n", " ")
+   return client.embeddings.create(input = [text], model=model).data[0].embedding
+
+def retrievePassages(index, size, user_queries = user_queries):
+    current_app.logger.info(f"About to retrieve passages for queries: {user_queries}")
     # initializing an empty list which will be used to store the results of the search
     results = []
-
-    # Defining the index
-    index = "search-chatbot"
-
-    # Defining the number of passages to retrieve
-    size = 2
-    
-    
-
     # Processing each query
     for query in user_queries:
         # Generating the embeddings for every query in the user_queries
@@ -71,7 +61,7 @@ def retrievePassages(user_queries = user_queries):
         # extracting the top 3 passages
         top_passages = needed_passages[:size]
         
-        # print("Passages are: ",needed_passages)
+        # current_app.logger.info("Passages are: ",needed_passages)
         
         # extracting the necessary information for csv output
         passage_texts, score = zip(*top_passages)
@@ -93,13 +83,4 @@ def retrievePassages(user_queries = user_queries):
 
     # saving final results to the questions_answers.csv
     # results_df.to_csv('../docs/question_answers.csv', index=False)
-    print(results)
     return results
-
-
-
-def main():
-    retrievePassages(user_queries)
-
-if __name__ == "__main__":
-    main()

@@ -11,3 +11,12 @@ tiktoken
 cohere
 elasticsearch
 sentence_transformers
+gensim
+nltk
+transformers
+scikit-learn
+numpy
+torch
+tensorflow
+reportlab
+sentencepiece
