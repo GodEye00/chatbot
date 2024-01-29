@@ -22,3 +22,4 @@ tensorflow
 reportlab
 sentencepiece
 eventlet
+PyPDF2
