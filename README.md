@@ -69,6 +69,7 @@ The application features a chat system where users can send messages and receive
 - **WebSocket `/chat`**: Handles incoming chat messages and responds with processed messages.
     - Payload for the `/chat` event:
       - `message`: The user's message.
+      - `connection_id`: connection id returned after connection is established. This is required to join a conversation room with the llm.
       - `index` (optional): The Elasticsearch index to be used (default is 'search-chatbot-final').
       - `size` (optional): The size parameter for the model's response (default is 2).
 
