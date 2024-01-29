@@ -2,7 +2,7 @@ flask
 flask-socketio
 openai
 pytest
-bs
+bs4
 beautifulsoup4
 langchain
 unstructured
