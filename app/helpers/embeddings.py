@@ -1,6 +1,6 @@
 import pandas as pd
 from openai import OpenAI
-from flask import current_app
+from flask import copy_current_request_context, current_app
 import threading
 
 from ..utils.write_to_file import write
@@ -35,7 +35,11 @@ def perform_embedding(passage):
         )
         # Filter out rows where embedding retrieval failed
         passage_emb_duo = passage_emb_duo.dropna(subset=['Embedding'])
+        
+    @copy_current_request_context
+    def thread_function():
+            write(passage_emb_duo, 'csv', file_name)
     # Start the thread to write to CSV, without waiting for it to finish
-    thread = threading.Thread(target=write, args=(passage_emb_duo, 'csv', file_name))
+    thread = threading.Thread(target=thread_function)
     thread.start()
     return passage_emb_duo

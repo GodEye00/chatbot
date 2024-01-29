@@ -47,36 +47,37 @@ def retrievePassages(index, size, user_queries = user_queries):
             }
         }
         response = es.search(index=index, body=body)
-        
+
         # Getting the needed passages and metadata from the search response
         needed_passages = []
         for hit in response['hits']['hits']:
             passage = hit['_source']['Passage']
             score = hit['_score']
             needed_passages.append((passage, score))
-            
+
         # sorting the needed passages by their score
         needed_passages.sort(key=lambda x: x[1], reverse=True)
-        
-        # extracting the top 3 passages
+
+        # extracting the top {size} passages
         top_passages = needed_passages[:size]
-        
+
         # current_app.logger.info("Passages are: ",needed_passages)
-        
+
         # extracting the necessary information for csv output
         passage_texts, score = zip(*top_passages)
         passage_texts = list(passage_texts)
         score = list(score)
-        
-        results.append({
-            "Question": query,
-            "Passage 1": passage_texts[0],
-            "Relevance Score 1": score[0],
-            "Passage 2": passage_texts[1],
-            "Relevance Score 2": score[1],
-        })
-        
-        results = "Passage 1: "+ passage_texts[0]+" Passage 1 Score: "+str(score[0])+" Passage 2: "+passage_texts[1]+" Passage 2 Score: "+str(score[1])
+
+        results = ""
+        for i, passage in enumerate(passage_texts):
+            # results.append({
+            #     "Question": query,
+            #     "Passage 1": passage_texts[0],
+            #     "Relevance Score 1": score[0],
+            #     "Passage 2": passage_texts[1],
+            #     "Relevance Score 2": score[1],
+            # })
+            results += f" Passage {i+1}: "+ passage_texts[i]+ f" Passage {i+1} Score: "+str(score[i])+"."
         
     # Creating a DataFrame from the results
     # results_df = pd.DataFrame(results)

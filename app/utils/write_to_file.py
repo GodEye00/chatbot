@@ -7,14 +7,13 @@ from docx import Document
 from reportlab.pdfgen import canvas
 
 def write(file_data, ext, file_name, headers=None):
-    current_app.logger.info(f"About to write to file: {file_name}")
     """
     Writes data to a file with handling for different file extensions.
 
     Args:
     - file_data: The data to write. Can be a string, a list, or other types that can be converted to string.
     - ext: The extension or format of the file.
-    - file_path: The full file path where the file is to be written.
+    - file_name: The name of the file to be created.
     - headers: The headers for CSV file (optional).
 
     Returns:
@@ -22,6 +21,12 @@ def write(file_data, ext, file_name, headers=None):
     """
     file_dir = "../docs/"
     file_path = os.path.join(file_dir, f"{file_name}.{ext}")
+
+    # Ensure the directory exists
+    os.makedirs(file_dir, exist_ok=True)
+
+    current_app.logger.info(f"About to write to file: {file_path}")
+
     try:
         if ext == 'csv':
             if isinstance(file_data, list):

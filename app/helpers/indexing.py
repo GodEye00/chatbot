@@ -44,7 +44,8 @@ def process_row(row, es_index):
         return None
 
 # Preparing the passage_metadata for indexing purposes
-def index_data(data, es_index, mapping=mapping):
+index = "search-chatbot-final"
+def index_data(data, es_index=index, mapping=mapping):
     current_app.logger.info("About to start indexing data")
     indexing_data = []
     if isinstance(data, pd.DataFrame):

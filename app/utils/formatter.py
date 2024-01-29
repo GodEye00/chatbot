@@ -2,7 +2,7 @@
 
 from flask import current_app
 
-def split_flatten_and_join(arr, k, separator=","):
+def split_flatten_and_join(arr, k=3, separator=","):
     current_app.logger.info("About to split format and join arrays")
     """
     Splits each sub-array of arr into chunks of size k if its length is greater than k,

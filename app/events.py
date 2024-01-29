@@ -28,9 +28,8 @@ def handle_client_message(json):
     current_app.logger.info(f"Got chat: {json} ")
     conversation_id = json.get('connection_id', "")
     user_message = json['message']
-
-    index = "search-chatbot-final"
-    size = 2
+    index = json.get('index', 'search-chatbot-final')
+    size = json.get('size', 2)
     retrieved_passage = retrievePassages(index, size, [user_message])
     message = {"role": "user", "content": user_message+"\ninfo: " + retrieved_passage}
     update_conversation_history(conversation_id, message, default_messages)

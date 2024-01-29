@@ -24,17 +24,20 @@ def upload_file():
         if file.filename == '':
             return jsonify({"error": "No selected file"}), 400
 
+        split_size = request.form.get('split_size', 3)
+        split_size = int(split_size)
+        index = request.form.get('index', "search-chatbot-final")
+        current_app.logger.info(f"Request payload is: {index, split_size}")
         file_contents = process_uploaded_file(file)
-        chunks = parsing.parse_text(file_contents)
+        chunks = parsing.parse_text(file_contents, split_size)
         generated_embeddings = embeddings.perform_embedding(chunks)
-        index = "search-chatbot-final"
         success = indexing.index_data(generated_embeddings, index)
         if success:
             current_app.logger.info("Data successfully uploaded and indexed")
-            return jsonify("Data uploaded and indexed successfully"), 200
+            return jsonify({"success": "Data uploaded and indexed successfully"}), 200
         else:
             current_app.logger.error("An error occurred while uploading and indexing data")
-            return jsonify("Unable to index data"), 500
+            return jsonify({"failure": "Unable to index data due to unexpected error"}), 500
     except Exception as e:
         current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
         return jsonify({"error": "Sorry, an error occurred while uploading data"}), 500
