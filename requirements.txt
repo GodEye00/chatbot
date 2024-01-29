@@ -21,3 +21,4 @@ torch
 tensorflow
 reportlab
 sentencepiece
+eventlet
