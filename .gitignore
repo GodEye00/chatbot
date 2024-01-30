@@ -2,4 +2,4 @@ env
 logs
 .vscode
 .DS_Store
-utils/extracted_pages
+app/utils/extracted_pages
