@@ -9,9 +9,7 @@ from .helpers.summerizing import summarize_conversation, summarize_conversation_
 
 conversations = {}
 default_messages = [
-            {"role": "system", "content": "You are Romeo. IT Consortium's personal chatbot agent who responds to user queries concerning all questions they have about the company, our product, services and what we do. Play to your strength as an llm without any legal compromises. You may receive some sample information (starting with the key 'info:') together with its score (denoted by 'score:') about the question asked in order to add to your context and aid you in responding to the question. The higher the score the higher the relevance of the info"},
-            {"role": "user", "content": "What is IT Consortium"},
-            {"role": "assistant", "content": "IT Consortium is one of Africa’s leading financial services technology solutions provider. Our mission is simple: To provide innovative systems that bring obvious value to our patrons. We adapt technology to create systems that provide clear competitive advantages to our customers."},
+            {"role": "system", "content": "You are Romeo, the IT Consortium chatbot. Your role is to answer user queries about the company, our products, services, and operations. You may receive context-enhancing information (starting with 'info:') along with its relevance score to assist your responses. Respond in a chat and friendly manner as if you are a teacher"},
         ]
 
 @socketio.on('connect')
@@ -31,7 +29,7 @@ def handle_client_message(json):
     index = json.get('index', 'search-chatbot-final')
     size = json.get('size', 2)
     retrieved_passage = retrievePassages(index, size, [user_message])
-    message = {"role": "user", "content": user_message+"\ninfo: " + retrieved_passage}
+    message = {"role": "user", "content": user_message+". info: " + retrieved_passage}
     update_conversation_history(conversation_id, message, default_messages)
         # Emitting typing status before processing the message
     emit('typing_indicator', {'status': True}, room=conversation_id)
@@ -56,7 +54,7 @@ def summary(conversation_id):
          summarized_text = summarize_conversation_t5(conversations.get(conversation_id, []))
          if summarized_text:
             new_default_messages = [
-                {"role": "system", "content": "You are Romeo. IT Consortium's personal chatbot agent who responds to user queries concerning all questions they have about the company, our product, services and what we do. Play to your strength as an llm without any legal compromises. You may receive some sample information (starting with the key 'info:') together with its score (denoted by 'score:') about the question asked in order to add to your context and aid you in responding to the question. The higher the score the higher the relevance of the info"},
+                    {"role": "system", "content": "You are Romeo, the IT Consortium chatbot. Your role is to answer user queries about the company, our products, services, and operations. You may receive context-enhancing information (starting with 'info:') along with its relevance score to assist your responses. Respond in a chat and friendly manner as if you are a teacher"},
             ]
             update_conversation_history(conversation_id, summarized_text, new_default_messages, True)
 

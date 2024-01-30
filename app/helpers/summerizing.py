@@ -1,7 +1,7 @@
 from transformers import pipeline, T5Tokenizer, T5ForConditionalGeneration
 from flask import current_app
 
-def summarize_conversation(conversation_array, max_length=2048, summary_model="sshleifer/distilbart-cnn-12-6"):
+def summarize_conversation(conversation_array, max_length=4096, summary_model="sshleifer/distilbart-cnn-12-6"):
     current_app.logger.info("About to summarize conversation")
     """
     Summarize the conversation if it exceeds max_length.
@@ -33,7 +33,7 @@ def summarize_conversation(conversation_array, max_length=2048, summary_model="s
 
 
 
-def summarize_conversation_t5(conversation_array, max_length=2048, model_name="t5-base"):
+def summarize_conversation_t5(conversation_array, max_length=4096, model_name="t5-base"):
     concatenated_conversation = " ".join([msg["content"] for msg in conversation_array])
     
     if len(concatenated_conversation) > max_length:
