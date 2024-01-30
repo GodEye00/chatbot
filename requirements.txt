@@ -24,4 +24,4 @@ sentencepiece
 eventlet
 PyPDF2
 docx
-exceptions
+pyexceptions
