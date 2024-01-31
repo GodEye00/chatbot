@@ -7,12 +7,11 @@ import os
 
 from .config import Config
 
-socketio = SocketIO()
-
 app = Flask(__name__)
 
 app = Flask(__name__)
 CORS(app)
+socketio = SocketIO(app, cors_allowed_origins="*")
 
 LOG_FILE = 'app.log'
 
