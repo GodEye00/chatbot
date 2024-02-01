@@ -11,16 +11,22 @@ file_name = 'output'
 
 def parse_text(text, size):
     current_app.logger.info("About to start parsing text")
-    passages = chunking.transformer_based_chunking(text)
-    formatted_chunks = formatter.split_flatten_and_join(passages, size)
-    
-    @copy_current_request_context
-    def thread_function():
-        write_to_file.write(formatted_chunks, 'csv', file_name, ['Passage'])
+    try:
+        passages = chunking.transformer_based_chunking(text)
+        formatted_chunks = formatter.split_flatten_and_join(passages, size)
+        
+        @copy_current_request_context
+        def thread_function():
+            try:
+                write_to_file.write(formatted_chunks, 'csv', file_name, ['Passage'])
+            except Exception as e:
+                current_app.logger.exception(f"An error occurred while writing embeddings to CSV. Error: {e}")
 
-    # Start the thread to write to CSV, without waiting for it to finish
-    thread = threading.Thread(target=thread_function)
-    thread.start()
+        thread = threading.Thread(target=thread_function)
+        thread.start()
 
-    return formatted_chunks
+        return formatted_chunks
+    except Exception as e:
+        current_app.logger.exception(f"An error occurred while parsing file(s): Error: {e}")
+        raise Exception("An error occurred while parsing file(s)")
 

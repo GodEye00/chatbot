@@ -34,18 +34,22 @@ def summarize_conversation(conversation_array, max_length=4096, summary_model="s
 
 
 def summarize_conversation_t5(conversation_array, max_length=4096, model_name="t5-base"):
-    concatenated_conversation = " ".join([msg["content"] for msg in conversation_array])
-    
-    if len(concatenated_conversation) > max_length:
-        tokenizer = T5Tokenizer.from_pretrained(model_name)
-        model = T5ForConditionalGeneration.from_pretrained(model_name)
+    try:
+        concatenated_conversation = " ".join([msg["content"] for msg in conversation_array])
+        
+        if len(concatenated_conversation) > max_length:
+            tokenizer = T5Tokenizer.from_pretrained(model_name)
+            model = T5ForConditionalGeneration.from_pretrained(model_name)
 
-        inputs = tokenizer.encode("summarize: " + concatenated_conversation, return_tensors="pt", max_length=512, truncation=True)
-        summary_ids = model.generate(inputs, max_length=150, min_length=40, length_penalty=2.0, num_beams=4, early_stopping=True)
-        summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
+            inputs = tokenizer.encode("summarize: " + concatenated_conversation, return_tensors="pt", max_length=512, truncation=True)
+            summary_ids = model.generate(inputs, max_length=150, min_length=40, length_penalty=2.0, num_beams=4, early_stopping=True)
+            summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
-        current_app.logger.info(f"Summarized Conversation: {summary}")
-        return {"role": "assistant", "content": "Your History: " + summary}
-    
-    return False
+            current_app.logger.info(f"Summarized Conversation: {summary}")
+            return {"role": "assistant", "content": "Your History: " + summary}
+        
+        return False
+    except Exception as e:
+        current_app.logger.exception(f"An error occurred while summarizing the conversation. Error: {e}")
+        return Exception
 

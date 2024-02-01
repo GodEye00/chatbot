@@ -48,19 +48,19 @@ index = "search-chatbot-final"
 def index_data(data, es_index=index, mapping=mapping):
     current_app.logger.info("About to start indexing data")
     indexing_data = []
-    if isinstance(data, pd.DataFrame):
-        data_iter = data.iterrows()
-    elif isinstance(data, list):
-        data_iter = enumerate(data)
-    else:
-        raise TypeError("Data must be a pandas DataFrame or a list")
-
-    for index, row in data_iter:
-        document = process_row(row, es_index)
-        if document:
-            indexing_data.append(document)
-
     try:
+        if isinstance(data, pd.DataFrame):
+            data_iter = data.iterrows()
+        elif isinstance(data, list):
+            data_iter = enumerate(data)
+        else:
+            raise TypeError("Data must be a pandas DataFrame or a list")
+
+        for index, row in data_iter:
+            document = process_row(row, es_index)
+            if document:
+                indexing_data.append(document)
+
         if es.indices.exists(index=es_index):
             es.indices.delete(index=es_index)
         es.indices.create(index=es_index, body=mapping)
@@ -68,5 +68,5 @@ def index_data(data, es_index=index, mapping=mapping):
         current_app.logger.info("Successfully indexed data")
         return True
     except Exception as e:  # Catching broader exceptions for robust error handling
-        current_app.logger.execption(f"Error during indexing: {e}")
+        current_app.logger.exception(f"Error during indexing: {e}")
         return False

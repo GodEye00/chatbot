@@ -5,6 +5,7 @@ import re
 import zipfile
 import PyPDF2
 from docx import Document
+from io import BytesIO
 import tempfile
 import chardet
 
@@ -41,7 +42,7 @@ def import_text_from_file(file_path):
         current_app.logger.error(f"Error: Unsupported file type: {file_path}")
         return None
 
-# Function to import text from all TXT and PDF files in a directory
+# Function to import text from all TXT, PDF, and DOCX files in a ZIP file
 def process_uploaded_file(file):
     file_contents = ''
     if file.filename.endswith('.txt'):
@@ -84,21 +85,34 @@ def process_uploaded_file(file):
             with zipfile.ZipFile(temp_file_path, 'r') as zip_ref:
                 for filename in zip_ref.namelist():
                     with zip_ref.open(filename) as f:
-                        byte_content = f.read()
-                        # Try to detect the encoding
-                        detected_encoding = chardet.detect(byte_content)['encoding']
-                        if detected_encoding:
+                        if filename.lower().endswith('.pdf'):
                             try:
-                                content = byte_content.decode(detected_encoding)
-                            except UnicodeDecodeError:
-                                current_app.logger.exception(f"Could not decode {filename} with detected encoding {detected_encoding}")
+                                pdf_memory_file = BytesIO(f.read())
+                                pdf_reader = PyPDF2.PdfReader(pdf_memory_file)
+                                pdf_text = ""
+                                for page in pdf_reader.pages:
+                                    pdf_text += page.extract_text() + " "
+                                pdf_text = re.sub(r'\n+', ' ', pdf_text)
+                                file_contents += pdf_text.strip()
+                            except Exception as e:
+                                current_app.logger.error(f"Error reading PDF file {filename} in ZIP: {e}")
                                 continue  # Skip this file
                         else:
-                            current_app.logger.error(f"Could not detect encoding for {filename}")
-                            continue  # Skip this file
-                        content = re.sub(r'\n+', ' ', content)
-                        file_contents += content
-            
+                            # For non-PDF files inside the ZIP
+                            byte_content = f.read()
+                            detected_encoding = chardet.detect(byte_content)['encoding']
+                            if detected_encoding:
+                                try:
+                                    content = byte_content.decode(detected_encoding)
+                                except UnicodeDecodeError:
+                                    current_app.logger.exception(f"Could not decode {filename} with detected encoding {detected_encoding}")
+                                    continue  # Skip this file
+                            else:
+                                current_app.logger.error(f"Could not detect encoding for {filename}")
+                                continue  # Skip this file
+                            content = re.sub(r'\n+', ' ', content)
+                            file_contents += content
+
             os.remove(temp_file_path)
         except zipfile.BadZipFile:
             current_app.logger.exception("Invalid zip file")
@@ -109,5 +123,7 @@ def process_uploaded_file(file):
     else:
         current_app.logger.error("Unsupported file type")
         return None
-
-    return file_contents
+    if len(file_contents) > 0:
+        return file_contents
+    else:
+        raise Exception("File content is empty")

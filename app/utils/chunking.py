@@ -47,11 +47,11 @@ def topic_aware_chunking(text, threshold=0.1):
             bow = common_dictionary.doc2bow(processed_sentence)
             topic_distribution = lda_model.get_document_topics(bow)
             if not topic_distribution:
-                continue  # Skip sentences where LDA can't assign topic (e.g., no content after preprocessing)
+                continue  # Skipping sentences where LDA can't assign topic (e.g., no content after preprocessing)
             dominant_topic = topic_distribution[0][0]
 
             if current_topic is None or topic_distribution[0][1] < threshold:
-                if current_chunk:  # Avoid appending empty chunks
+                if current_chunk:  # Avoiding to append empty chunks
                     chunks.append(' '.join(current_chunk))
                 current_chunk = [sentence]
                 current_topic = dominant_topic
@@ -61,7 +61,7 @@ def topic_aware_chunking(text, threshold=0.1):
             current_app.logger.exception(f"Error processing sentence: {sentence}")
             current_app.logger.exception(f"Exception: {e}")
 
-    if current_chunk:  # Append the last chunk if it's not empty
+    if current_chunk:  # Appending the last chunk if it's not empty
         chunks.append(current_chunk)
 
     return chunks
@@ -77,41 +77,48 @@ def topic_aware_chunking(text, threshold=0.1):
     # xlnet-base-cased
     # bert-large-uncased
 def transformer_based_chunking(text, max_length=512):
-    model_name = "bert-base-uncased"
-    tokenizer = BertTokenizer.from_pretrained(model_name)
-    model = BertModel.from_pretrained(model_name)
+        try:
+            model_name = "bert-base-uncased"
+            tokenizer = BertTokenizer.from_pretrained(model_name)
+            model = BertModel.from_pretrained(model_name)
 
-    # Split the text into tokens and then into chunks of max_length tokens
-    tokenized_text = tokenizer.tokenize(text)
-    token_chunks = [tokenized_text[i:i + max_length] for i in range(0, len(tokenized_text), max_length)]
+            # Splitting the text into tokens and then into chunks of max_length tokens
+            tokenized_text = tokenizer.tokenize(text)
+            token_chunks = [tokenized_text[i:i + max_length] for i in range(0, len(tokenized_text), max_length)]
 
-    sentence_embeddings = []
-    for chunk in token_chunks:
-        # Convert tokens to their IDs and pad if necessary
-        encoded_chunk = tokenizer.convert_tokens_to_ids(chunk)
-        encoded_chunk = torch.tensor([encoded_chunk])  # Convert to PyTorch tensors
-        with torch.no_grad():  # Inference mode
-            output = model(encoded_chunk)
-            hidden_states = output.last_hidden_state
-            # Extract embeddings (e.g., mean pooling)
-            sentence_embedding = torch.mean(hidden_states, dim=1).squeeze()
-            sentence_embeddings.append(sentence_embedding.numpy())
+            sentence_embeddings = []
+            for chunk in token_chunks:
+                # Converting tokens to their IDs and pad if necessary
+                encoded_chunk = tokenizer.convert_tokens_to_ids(chunk)
+                encoded_chunk = torch.tensor([encoded_chunk])  # Convert to PyTorch tensors
+                with torch.no_grad():  # Inference mode
+                    output = model(encoded_chunk)
+                    hidden_states = output.last_hidden_state
+                    # Extracting embeddings (e.g., mean pooling)
+                    sentence_embedding = torch.mean(hidden_states, dim=1).squeeze()
+                    sentence_embeddings.append(sentence_embedding.numpy())
+        except Exception as e:
+            current_app.logger.exception("An error occurred while performing tokenizations and sentence groupings.")
+            raise Exception("An error occurred while performing tokenizations and sentence groupings")
+        try:
+            # Applying clustering (KMeans example)
+            clusters = KMeans(n_clusters=5).fit(sentence_embeddings).labels_
 
-    # Apply clustering (KMeans example)
-    clusters = KMeans(n_clusters=5).fit(sentence_embeddings).labels_  # Adjust cluster number as needed
-
-    # Reconstruct chunks based on clustering
-    chunks = []
-    current_chunk = []
-    for chunk, cluster in zip(token_chunks, clusters):
-        sentences = nltk.sent_tokenize(tokenizer.convert_tokens_to_string(chunk))
-        if not current_chunk or cluster != clusters[-1]:
+            # Reconstructing chunks based on clustering
+            chunks = []
+            current_chunk = []
+            for chunk, cluster in zip(token_chunks, clusters):
+                sentences = nltk.sent_tokenize(tokenizer.convert_tokens_to_string(chunk))
+                if not current_chunk or cluster != clusters[-1]:
+                    if current_chunk:
+                        chunks.append(current_chunk)
+                    current_chunk = sentences
+                else:
+                    current_chunk.extend(sentences)
             if current_chunk:
-                chunks.append(current_chunk)
-            current_chunk = sentences
-        else:
-            current_chunk.extend(sentences)
-    if current_chunk:
-        chunks.append(current_chunk)  # Append last chunk
+                chunks.append(current_chunk)  # Append last chunk
 
-    return chunks
+            return chunks
+        except Exception as e:
+            current_app.logger.error(f"An error occurred while chunking sentences: Error: {e}")
+            raise Exception("An error occurred while chunking sentences")
