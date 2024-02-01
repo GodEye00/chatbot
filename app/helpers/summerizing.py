@@ -33,7 +33,7 @@ def summarize_conversation(conversation_array, max_length=4096, summary_model="s
 
 
 
-def summarize_conversation_t5(conversation_array, max_length=4096, model_name="t5-base"):
+def summarize_conversation_t5(conversation_array, max_length=2048, model_name="t5-base"):
     try:
         concatenated_conversation = " ".join([msg["content"] for msg in conversation_array])
         
@@ -46,7 +46,7 @@ def summarize_conversation_t5(conversation_array, max_length=4096, model_name="t
             summary = tokenizer.decode(summary_ids[0], skip_special_tokens=True)
 
             current_app.logger.info(f"Summarized Conversation: {summary}")
-            return {"role": "assistant", "content": "Your History: " + summary}
+            return {"role": "system", "content": "Summary: " + summary}
         
         return False
     except Exception as e:

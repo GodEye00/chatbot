@@ -16,7 +16,7 @@ default_messages = [
     {"role": "system", "content": "You're 'Romeo,' the IT Consortium chatbot, here to answer "+
                                " questions about our services. You'll get more info denoted by 'Context:' for "+
                                 "better replies. Use a friendly tone. For greetings like 'Hi/What's up/Yo'"+
-                                "respond as if starting fresh: Without Context "+
+                                "respond as if starting fresh: Without Context. "+
                                 "Ignore 'Context:' for greetings. If unsure about names, ask for clarity."},
 ]
 
@@ -28,22 +28,27 @@ def generate_conversation_id():
     return str(uuid.uuid4())
 
 
-def update_conversation_history(conversation_id, message, summary=False):
-    with conversation_lock:
-        if conversation_id not in conversations:
-            conversations[conversation_id] = default_messages.copy()
-        if summary:
-            # Reset conversation with a new default message and the summary
-            conversations[conversation_id] = default_messages.copy() + [message]
-        else:
-            conversations[conversation_id].append(message)
+def update_conversation_history(conversation_id, message, default_messages=default_messages, summary=False):
+    if conversation_id not in conversations:
+        conversations[conversation_id] = default_messages.copy()
+
+    if summary:
+        new_conversation = default_messages.copy() + [message]
+        conversations[conversation_id] = new_conversation
+    else:
+        conversations[conversation_id].append(message)
 
 def summary(conversation_id):
-    with conversation_lock:
-        conversation_history = conversations.get(conversation_id, [])
-    summarized_content = summarize_conversation_t5(conversation_history)
-    summarized_message = {"role": "system", "content": "Summary: " + summarized_content}
-    update_conversation_history(conversation_id, summarized_message, summary=True)
+         summarized_text = summarize_conversation_t5(conversations.get(conversation_id, []))
+         if summarized_text:
+            new_default_messages = [
+                        {"role": "system", "content": "You're 'Romeo,' the IT Consortium chatbot, here to answer "+
+                                                    " questions about our services. You'll get more info denoted by 'Context:' for "+
+                                                        "better replies. Use a friendly tone. For greetings like 'Hi/What's up/Yo'"+
+                                                        "respond as if starting fresh: Without Context. "+
+                                                        "Ignore 'Context:' for greetings. If unsure about names, ask for clarity."},
+                        ]
+            update_conversation_history(conversation_id, summarized_text, new_default_messages, True)
 
 
 @socketio.on('connect')
