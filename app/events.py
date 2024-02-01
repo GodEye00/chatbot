@@ -65,10 +65,10 @@ def handle_client_message(json):
     size = json.get('size', 2)
     retrieved_passage = retrievePassages(index, size, [user_message])
     message = {"role": "user", "content": user_message + ". Context: " + retrieved_passage}
-    
+
     update_conversation_history(conversation_id, message)
     emit('typing_indicator', {'status': True}, room=conversation_id)
-    
+
     @copy_current_request_context
     def process_message():
         try:
@@ -82,7 +82,7 @@ def handle_client_message(json):
             emit('error', {'error': "An error occurred while processing message"}, room=conversation_id)
 
     threading.Thread(target=process_message).start()
-    
+
 @socketio.on('disconnect')
 def handle_disconnect():
     try:
