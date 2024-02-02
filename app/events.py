@@ -80,7 +80,7 @@ def handle_client_message(json):
             response = ask_gpt4(conversations.get(conversation_id, default_messages))
             update_conversation_history(conversation_id, response)
             emit('typing_indicator', {'status': False}, room=conversation_id)
-            emit('message_from_llm', {'message': response["content"], 'connection_id': conversation_id}, room=conversation_id)
+            emit('message_from_llm', {'message': response["content"]}, room=conversation_id)
             summary(conversation_id)
         except Exception as e:
             current_app.logger.error(f"Error processing message: {e}")
