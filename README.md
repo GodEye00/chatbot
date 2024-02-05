@@ -37,6 +37,9 @@ Before running the application, ensure you have the following installed:
    export ELASTICSEARCH_CLOUD_ID=your_cloud_id
    export ELASTICSEARCH_API_KEY=your_api_key
    export OPENAI_API_KEY=your_openai_key
+   export AWS_ACCESS_KEY_ID=aws_access_key_id
+   export AWS_SECRET_ACCESS_KEY=aws_secret_access_key
+   export AWS_REGION=your_region
    ```
 
 ## Running the Application
