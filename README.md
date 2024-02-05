@@ -63,6 +63,19 @@ The application features a chat system where users can send messages and receive
   - `index` (optional): The Elasticsearch index to be used (default is 'search-chatbot-final').
   - `split_size` (optional): The size for splitting the text for indexing (default is 3).
 
+- **Route `/upload-s3`**: Used to upload document(s) to s3 bucket which may later be used for indexing. The endpoint requires the following payload:
+  - `data`: The zipped file(s) to be uploaded.
+
+- **Route `/index`**: Used for indexing uploaded files. The endpoint requires the following payload:
+  - `file`: The name of the file to use for the indexing. File must have already been uploaded. Use 'all' to denote indexing ALL currently uploaded files in s3 bucket. Default is 'all'.
+  - `index` (optional): The Elasticsearch index to be used (default is 'search-chatbot-final').
+  - `split_size` (optional): The size for splitting the text for indexing (default is 3).
+
+- **Route `/get-files`**: Used to get all uploaded files in s3 bucket.
+
+- **Route `/get-csrf-token`**: Used to get csrf token that must be added to all forms upload. Add this csrf token in order to upload any form data.
+
+
 ### Listeners:
 
 - **WebSocket `/connect`**: Establishes a WebSocket connection and joins a unique room for isolated conversations.
@@ -75,9 +88,10 @@ The application features a chat system where users can send messages and receive
 
   ### Events:
 
-  - **WebSocket `connection`**: Used to show that the connection is successfully established.
-  - **WebSocket `typing_indicator`**: Used to listen to typing indication showing that the llm model is responding to a request.
-  - **WebSocket `message_from_llm`**: Used to receive processed messages after llm response is complete.
+  - **WebSocket `connection`**: Used to show that the connection is successfully established. Data type is string.
+  - **WebSocket `typing_indicator`**: Used to listen to typing indication showing that the llm model is responding to a request. Data type is string.
+  - **WebSocket `message_from_llm`**: Used to receive processed messages after llm response is complete. Data type is string.
+  - **WebSocket `chunks_retrieved`**: Used to list the passages that were retrieved and added to the prompt's context for llm to process. Data type is array[].
 
 ## File Processing
 

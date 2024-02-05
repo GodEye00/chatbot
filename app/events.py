@@ -27,6 +27,18 @@ def authenticate_user(request):
 def generate_conversation_id():
     return str(uuid.uuid4())
 
+def validate_chat_data(json):
+    required_fields = ['connection_id', 'message', 'index', 'size']
+    errors = []
+    for field in required_fields:
+        if field not in json or json.get(field) == None or json.get(field) == "":
+            errors.append(f"{field} is required")
+        else:
+            if field in ['index'] and not isinstance(json[field], str):
+                errors.append(f"{field} must be a string")
+            if field in ['size'] and not isinstance(json[field], int):
+                errors.append(f"{field} must be an integer")
+    return errors
 
 def update_conversation_history(conversation_id, message, default_messages=default_messages, summary=False):
     if conversation_id not in conversations:
@@ -61,6 +73,10 @@ def handle_connect():
 
 @socketio.on('chat')
 def handle_client_message(json):
+    errors = validate_chat_data(json)
+    if errors:
+        emit('error', {'error': "Validation errors: " + ", ".join(errors)}, room=json.get('connection_id', ''))
+        return
     current_app.logger.info(f"Got chat: {json}")
     conversation_id = json.get('connection_id', "")
     user_message = json['message']

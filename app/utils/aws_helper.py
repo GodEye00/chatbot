@@ -30,7 +30,17 @@ def upload_file_to_s3(file):
         object_name = f"chatbot-files/{filename}"
 
         s3_client = boto3.client('s3')
+        
+        try:
+            # Simple call to check connectivity and credentials
+            current_app.logger.info('Checking connectivity and credentials. Heading bucket')
+            s3_client.head_bucket(Bucket='chatbot')
+        except Exception as e:
+            current_app.logger.exception("S3 Connectivity check failed: {e}")
+            return False, "S3 Connectivity check failed"
+
         file.seek(0)
+        current_app.logger.info('About to finally upload file to s3')
         s3_client.upload_fileobj(file, 'chatbot', object_name)
         return True, f"File {filename} uploaded to chatbot/{object_name}"
     except NoCredentialsError:

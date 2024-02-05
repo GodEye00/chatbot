@@ -4,6 +4,7 @@
         "botocore",
         "chardet",
         "jsonify",
-        "streamlit"
+        "streamlit",
+        "wtforms"
     ]
 }
