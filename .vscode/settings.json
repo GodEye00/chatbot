@@ -1,6 +1,7 @@
 {
     "cSpell.words": [
         "boto",
+        "botocore",
         "chardet",
         "jsonify",
         "streamlit"

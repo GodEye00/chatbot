@@ -70,14 +70,13 @@ def retrievePassages(index, size, user_queries = user_queries):
             score = list(score)
 
             results = ""
+            chunks = []
             for i, passage in enumerate(passage_texts):
-                # results.append({
-                #     "Question": query,
-                #     "Passage 1": passage_texts[0],
-                #     "Relevance Score 1": score[0],
-                #     "Passage 2": passage_texts[1],
-                #     "Relevance Score 2": score[1],
-                # })
+                chunks.append({
+                    "Question": query,
+                    "Passage 1": passage_texts[i],
+                    "Relevance Score 1": score[i]
+                })
                 results += f" Passage {i+1}: "+ passage_texts[i]+ f" Passage {i+1} Score: "+str(score[i])+"."
             
         # Creating a DataFrame from the results
@@ -85,7 +84,7 @@ def retrievePassages(index, size, user_queries = user_queries):
 
         # saving final results to the questions_answers.csv
         # results_df.to_csv('../docs/question_answers.csv', index=False)
-        return results
+        return chunks, results
     except Exception as e:
         current_app.logger.exception(f"An error occurred while retrieving passages from elasticsearch. Error: {e}")
         raise Exception

@@ -8,6 +8,8 @@ from docx import Document
 from io import BytesIO
 import tempfile
 import chardet
+import io
+
 
 # Function to import text from a file
 def import_text_from_file(file_path):
@@ -127,3 +129,56 @@ def process_uploaded_file(file):
         return file_contents
     else:
         raise Exception("File content is empty")
+    
+    
+    
+def process_file_content(file_content, filename):
+    """
+    Process file content based on the extension and return the text.
+    Supports .txt, .pdf, .docx, and .zip containing these file types.
+    """
+    file_contents = ''
+
+    if filename.endswith('.txt'):
+        # Handle TXT files
+        detected_encoding = chardet.detect(file_content)['encoding']
+        text = file_content.decode(detected_encoding)
+        file_contents = re.sub(r'\n+', ' ', text).strip()
+    elif filename.endswith('.pdf'):
+        # Handle PDF files
+        try:
+            with io.BytesIO(file_content) as pdf_file:
+                pdf_reader = PyPDF2.PdfReader(pdf_file)
+                pdf_text = [page.extract_text() for page in pdf_reader.pages if page.extract_text()]
+                file_contents = ' '.join(pdf_text).strip()
+        except Exception as e:
+            print(f"Error reading PDF file: {e}")
+    elif filename.endswith('.docx'):
+        # Handle DOCX files
+        try:
+            doc = Document(BytesIO(file_content))
+            docx_text = ' '.join(paragraph.text for paragraph in doc.paragraphs)
+            file_contents = re.sub(r'\n+', ' ', docx_text).strip()
+        except Exception as e:
+            print(f"Error reading DOCX file: {e}")
+    elif filename.endswith('.zip'):
+        # Handle ZIP files directly from binary content
+        try:
+            with io.BytesIO(file_content) as zip_bio:
+                with zipfile.ZipFile(zip_bio) as zip_ref:
+                    for file_info in zip_ref.infolist():
+                        if file_info.filename.endswith(('.txt', '.pdf', '.docx')):
+                            with zip_ref.open(file_info.filename) as extracted_file:
+                                extracted_file_content = extracted_file.read()
+                                # Recursively process each file within the ZIP
+                                file_contents += process_file_content(extracted_file_content, file_info.filename) + '\n'
+        except Exception as e:
+            print(f"Error processing ZIP file: {e}")
+    else:
+        print("Unsupported file type for " + filename)
+    if len(file_contents) > 0:
+        return file_contents.strip()
+    else:
+        raise Exception("File content is empty")
+
+

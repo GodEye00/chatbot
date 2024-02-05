@@ -68,7 +68,8 @@ def handle_client_message(json):
     # Retrieve and prepare the message
     index = json.get('index', 'search-chatbot-final')
     size = json.get('size', 2)
-    retrieved_passage = retrievePassages(index, size, [user_message])
+    chunks, retrieved_passage = retrievePassages(index, size, [user_message])
+    emit('chunks_retrieved', {'chunks': chunks}, room=conversation_id)
     message = {"role": "user", "content": user_message + ". Context: " + retrieved_passage}
 
     update_conversation_history(conversation_id, message)
