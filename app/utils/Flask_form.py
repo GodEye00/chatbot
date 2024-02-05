@@ -10,7 +10,3 @@ class UploadForm(FlaskForm):
 class S3UploadForm(FlaskForm):
     data = FileField('Data', validators=[DataRequired()])
 
-class IndexForm(FlaskForm):
-    split_size = IntegerField('Split Size', validators=[DataRequired(), NumberRange(min=1)])
-    index = StringField('Index', validators=[DataRequired()])
-    file = StringField('File', validators=[DataRequired()])

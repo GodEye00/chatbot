@@ -6,20 +6,26 @@ from flask import current_app
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
+aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
+aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
+region_name = os.getenv('AWS_REGION')
+
+session = boto3.Session(
+        region_name=region_name,
+        aws_access_key_id=aws_access_key_id,
+        aws_secret_access_key=aws_secret_access_key
+    )
+
 
 def upload_file_to_s3(file):
     """
     Upload a file-like object to an S3 bucket into a specified folder.
+    If the bucket does not exist, it is created.
     """
+    bucket_name = 'itc-agent'
+
     try:
         current_app.logger.info(f"Uploading file: {file.filename} to s3 bucket")
-        aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-        aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-        region_name = os.getenv('AWS_REGION')
-
-        boto3.setup_default_session(region_name=region_name,
-                                    aws_access_key_id=aws_access_key_id,
-                                    aws_secret_access_key=aws_secret_access_key)
 
         allowed_extensions = ['.pdf', '.txt', '.docx', '.zip']
         filename = file.filename
@@ -29,27 +35,43 @@ def upload_file_to_s3(file):
 
         object_name = f"chatbot-files/{filename}"
 
-        s3_client = boto3.client('s3')
-        
+        # Create a session using your current configurations
+        session = boto3.Session()
+        s3_client = session.client('s3')
+
+        # Check if the bucket exists and create it if not
         try:
-            # Simple call to check connectivity and credentials
-            current_app.logger.info('Checking connectivity and credentials. Heading bucket')
-            s3_client.head_bucket(Bucket='chatbot')
-        except Exception as e:
-            current_app.logger.exception("S3 Connectivity check failed: {e}")
-            return False, "S3 Connectivity check failed"
+            s3_client.head_bucket(Bucket=bucket_name)
+            current_app.logger.info(f"Bucket '{bucket_name}' already exists.")
+        except ClientError as e:
+            error_code = e.response['Error']['Code']
+            if error_code == '404' or error_code == 'NoSuchBucket':
+                current_app.logger.info(f"Bucket '{bucket_name}' does not exist. Creating bucket...")
+                if region_name == 'us-east-1':
+                    s3_client.create_bucket(Bucket=bucket_name)
+                else:
+                    location = {'LocationConstraint': region_name}
+                    s3_client.create_bucket(Bucket=bucket_name, CreateBucketConfiguration=location)
+                current_app.logger.info(f"Bucket '{bucket_name}' created.")
+            else:
+                current_app.logger.exception(f"S3 Connectivity check failed: {e}")
+                return False, f"S3 Connectivity check failed. Error: {e}"
 
         file.seek(0)
         current_app.logger.info('About to finally upload file to s3')
-        s3_client.upload_fileobj(file, 'chatbot', object_name)
-        return True, f"File {filename} uploaded to chatbot/{object_name}"
-    except NoCredentialsError:
+        s3_client.upload_fileobj(file, bucket_name, object_name)
+        return True, f"File {filename} uploaded to {bucket_name}/{object_name}"
+    except NoCredentialsError as e:
+        current_app.logger.exception("Error uploading file. Credentials not available: {e}")
         return False, "Error uploading file. Credentials not available"
     except ClientError as e:
         error_msg = e.response['Error']['Message']
+        current_app.logger.exception(f"Error uploading file: {e}")
         return False, f"Error uploading file: {error_msg}"
     except Exception as e:
+        current_app.logger.exception(f"Unexpected error: {str(e)}")
         return False, f"Unexpected error: {str(e)}"
+
 
 
 
@@ -58,23 +80,14 @@ def list_files_in_folder():
     """
     List files in a specified folder of an S3 bucket.
     """
-    current_app.logger.info("Listing chatbot bucket files in folder 'chatbot-files'")
-    aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
-    aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
-    region_name = os.getenv('AWS_REGION')
+    current_app.logger.info("Listing files in folder 'chatbot-files'")
+    bucket_name = 'itc-agent'
 
-    boto3.setup_default_session(
-        region_name=region_name,
-        aws_access_key_id=aws_access_key_id,
-        aws_secret_access_key=aws_secret_access_key
-    )
-    
-    s3_client = boto3.client('s3')
-    bucket_name = 'chatbot'
-    folder_name = 'chatbot-files/'
-    file_list = []
 
     try:
+        s3_client = session.client('s3')
+        folder_name = 'chatbot-files/'
+        file_list = []
         paginator = s3_client.get_paginator('list_objects_v2')
         pages = paginator.paginate(Bucket=bucket_name, Prefix=folder_name)
 
@@ -82,7 +95,6 @@ def list_files_in_folder():
             if 'Contents' in page:
                 for item in page['Contents']:
                     file_path = item['Key']
-                    # Optionally, strip the folder name from the file path
                     file_name = file_path.replace(folder_name, '')
                     file_list.append(file_name)
         return True, file_list
@@ -104,22 +116,25 @@ def get_file_from_s3(file_name):
     """
     Retrieve a file from a specified folder in an S3 bucket.
     """
+    current_app.logger.info("About to download file from s3 for indexing")
+    bucket_name = "itc-agent"
+    
     try:
-        s3_client = boto3.client('s3')
+        s3_client = session.client('s3')
         object_key = "chatbot-files/" + file_name
 
         if file_name.lower() == 'all':
             paginator = s3_client.get_paginator('list_objects_v2')
-            page_iterator = paginator.paginate(Bucket='chatbot', Prefix=object_key)
+            page_iterator = paginator.paginate(Bucket=bucket_name, Prefix=object_key)
             files_content = {}
             for page in page_iterator:
                 if 'Contents' in page:
                     for obj in page['Contents']:
-                        file_content = s3_client.get_object(Bucket='chatbot', Key=obj['Key'])['Body'].read()
+                        file_content = s3_client.get_object(Bucket=bucket_name, Key=obj['Key'])['Body'].read()
                         files_content[obj['Key']] = file_content
             return True, files_content
         else:
-            response = s3_client.get_object(Bucket='chatbot', Key=object_key)
+            response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
             file_content = response['Body'].read()
             return True, file_content
     except NoCredentialsError:
