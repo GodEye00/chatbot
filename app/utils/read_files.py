@@ -167,11 +167,40 @@ def process_file_content(file_content, filename):
             with io.BytesIO(file_content) as zip_bio:
                 with zipfile.ZipFile(zip_bio) as zip_ref:
                     for file_info in zip_ref.infolist():
-                        if file_info.filename.endswith(('.txt', '.pdf', '.docx')):
-                            with zip_ref.open(file_info.filename) as extracted_file:
-                                extracted_file_content = extracted_file.read()
-                                # Recursively process each file within the ZIP
-                                file_contents += process_file_content(extracted_file_content, file_info.filename) + '\n'
+                        if file_info.filename.startswith('__MACOSX') or file_info.filename.endswith('.DS_Store'):
+                            continue  # Skip this metadata file
+                        with zip_ref.open(file_info.filename) as extracted_file:
+                            extracted_file_content = extracted_file.read()
+                            # Recursively process each file within the ZIP
+                            # file_contents += process_file_content(extracted_file_content, file_info.filename) + '\n'
+                            if filename.lower().endswith('.pdf'):
+                                try:
+                                    pdf_memory_file = BytesIO(extracted_file_content)
+                                    pdf_reader = PyPDF2.PdfReader(pdf_memory_file)
+                                    pdf_text = ""
+                                    for page in pdf_reader.pages:
+                                        pdf_text += page.extract_text() + " "
+                                    pdf_text = re.sub(r'\n+', ' ', pdf_text)
+                                    file_contents += pdf_text.strip()
+                                except Exception as e:
+                                    current_app.logger.error(f"Error reading PDF file {filename} in ZIP: {e}")
+                                    continue  # Skip this file
+                            else:
+                                # For non-PDF files inside the ZIP
+                                byte_content = extracted_file_content
+                                detected_encoding = chardet.detect(byte_content)['encoding']
+                                if detected_encoding:
+                                    try:
+                                        content = byte_content.decode(detected_encoding)
+                                    except UnicodeDecodeError:
+                                        current_app.logger.exception(f"Could not decode {filename} with detected encoding {detected_encoding}")
+                                        continue  # Skip this file
+                                else:
+                                    current_app.logger.error(f"Could not detect encoding for {filename}")
+                                    continue  # Skip this file
+                                content = re.sub(r'\n+', ' ', content)
+                                file_contents += content
+
         except Exception as e:
             print(f"Error processing ZIP file: {e}")
     else:

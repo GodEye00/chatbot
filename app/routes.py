@@ -3,7 +3,7 @@ from flask_wtf.csrf import generate_csrf
 import traceback
 
 from app.utils.Flask_form import S3UploadForm, UploadForm
-from .utils.read_files import process_uploaded_file, process_file_content
+from .utils.read_files import import_text_from_file, process_uploaded_file, process_file_content
 from .utils.aws import upload_file_to_s3, get_file_from_s3, list_files_in_folder
 from .helpers import parsing, indexing, embeddings
 
@@ -82,8 +82,9 @@ def index_file():
         success, file_contents_bytes = get_file_from_s3(file_name)
         if not success:
             return jsonify({"error": "An error occurred while downloading files from s3."}), 500
-        
-        file_content = process_file_content(file_contents_bytes)
+        file_content = process_file_content(file_contents_bytes, file_name)
+        # file_content = import_text_from_file(file_contents_bytes)
+        print(file_content)
         chunks = parsing.parse_text(file_content, split_size)
         generated_embeddings = embeddings.perform_embedding(chunks)
         success = indexing.index_data(generated_embeddings, index)

@@ -17,15 +17,20 @@ session = boto3.Session(
     )
 
 
+import base64
+import os
+from botocore.exceptions import NoCredentialsError, ClientError
+from flask import current_app
+
 def upload_file_to_s3(file):
     """
-    Upload a file-like object to an S3 bucket into a specified folder.
+    Encode a file-like object to Base64 and upload it to an S3 bucket into a specified folder.
     If the bucket does not exist, it is created.
     """
     bucket_name = 'itc-agent'
 
     try:
-        current_app.logger.info(f"Uploading file: {file.filename} to s3 bucket")
+        current_app.logger.info(f"Uploading file: {file.filename} to S3 bucket")
 
         allowed_extensions = ['.pdf', '.txt', '.docx', '.zip']
         filename = file.filename
@@ -35,10 +40,9 @@ def upload_file_to_s3(file):
 
         object_name = f"chatbot-files/{filename}"
 
-
         s3_client = session.client('s3')
 
-        # Checking if the bucket exists and creating it if it does not
+        # Check if the bucket exists and create it if not
         try:
             s3_client.head_bucket(Bucket=bucket_name)
             current_app.logger.info(f"Bucket '{bucket_name}' already exists.")
@@ -57,9 +61,13 @@ def upload_file_to_s3(file):
                 return False, f"S3 Connectivity check failed. Error: {e}"
 
         file.seek(0)
-        current_app.logger.info('About to finally upload file to s3')
-        s3_client.upload_fileobj(file, bucket_name, object_name)
-        return True, f"File {filename} uploaded to {bucket_name}/{object_name}"
+        # file_content = file.read()
+        # encoded_content = base64.b64encode(file_content)
+
+        current_app.logger.info('About to finally upload file to S3')
+        response = s3_client.put_object(Bucket=bucket_name, Key=object_name, Body=file)
+        current_app.logger.info(f"Upload file to S3 successfully. Response: {response}")
+        return True, f"File {filename} encoded and uploaded to {bucket_name}/{object_name} in Base64 format"
     except NoCredentialsError as e:
         current_app.logger.exception("Error uploading file. Credentials not available: {e}")
         return False, "Error uploading file. Credentials not available"
@@ -70,7 +78,6 @@ def upload_file_to_s3(file):
     except Exception as e:
         current_app.logger.exception(f"Unexpected error: {str(e)}")
         return False, f"Unexpected error: {str(e)}"
-
 
 
 
