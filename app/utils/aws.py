@@ -35,11 +35,10 @@ def upload_file_to_s3(file):
 
         object_name = f"chatbot-files/{filename}"
 
-        # Create a session using your current configurations
-        session = boto3.Session()
+
         s3_client = session.client('s3')
 
-        # Check if the bucket exists and create it if not
+        # Checking if the bucket exists and creating it if it does not
         try:
             s3_client.head_bucket(Bucket=bucket_name)
             current_app.logger.info(f"Bucket '{bucket_name}' already exists.")
