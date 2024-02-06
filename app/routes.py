@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, jsonify, Blueprint, current_app
+from flask import render_template, request, jsonify, Blueprint, current_app
 from flask_wtf.csrf import generate_csrf
 import traceback
 
 from app.utils.Flask_form import S3UploadForm, UploadForm
 from .utils.read_files import process_uploaded_file, process_file_content
-from .utils.aws_helper import upload_file_to_s3, get_file_from_s3, list_files_in_folder
+from .utils.aws import upload_file_to_s3, get_file_from_s3, list_files_in_folder
 from .helpers import parsing, indexing, embeddings
 
 bp = Blueprint('main', __name__)

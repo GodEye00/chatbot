@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_socketio import SocketIO
 from flask_cors import CORS
-from flask_wtf import CSRFProtect
+# from flask_wtf import CSRFProtect
 import logging
 from logging.handlers import RotatingFileHandler
 import os
@@ -12,8 +12,8 @@ app = Flask(__name__)
 
 app = Flask(__name__)
 CORS(app)
-app.config['WTF_CSRF_TIME_LIMIT'] = 1800
-CSRFProtect(app)
+# app.config['WTF_CSRF_TIME_LIMIT'] = 1800
+# CSRFProtect(app)
 
 socketio = SocketIO(app, cors_allowed_origins="*")
 
