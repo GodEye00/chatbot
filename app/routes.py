@@ -1,11 +1,14 @@
-from flask import render_template, request, jsonify, Blueprint, current_app
+from flask import render_template, request, jsonify, Blueprint, current_app,  stream_with_context, Response
 from flask_wtf.csrf import generate_csrf
 import traceback
+import json
+from time import sleep
 
 from app.utils.Flask_form import S3UploadForm, UploadForm
 from .utils.read_files import import_text_from_file, process_uploaded_file, process_file_content
 from .utils.aws import upload_file_to_s3, get_file_from_s3, list_files_in_folder
 from .helpers import parsing, indexing, embeddings
+from .services import tasks
 
 bp = Blueprint('main', __name__)
 
@@ -50,6 +53,108 @@ def upload_to_s3():
         return jsonify({"error": form.errors}), 400
 
 
+
+@bp.route('/task-status/<task_id>', methods=['GET'])
+def task_status(task_id):
+    current_app.logger.info("Getting tasks status for task " + task_id)
+    def generate(task_id):
+        # Simulate getting task status
+        task = tasks.process_and_index_file.AsyncResult(task_id)
+        while task.state not in ['SUCCESS', 'FAILURE']:
+            sleep(1)  # Simulate a delay
+            task = tasks.process_and_index_file.AsyncResult(task_id)  # Refresh task status
+            if task.state == 'PENDING':
+                yield f"data: {json.dumps({'state': task.state, 'status': 'Pending...'})}\n\n"
+            elif task.state != 'FAILURE':
+                progress = {'state': task.state, 'current': task.info.get('current', 0), 'total': task.info.get('total', 1), 'status': task.info.get('status', '')}
+                if 'result' in task.info:
+                    progress['result'] = task.info['result']
+                yield f"data: {json.dumps(progress)}\n\n"
+            else:
+                # Handle task failure
+                yield f"data: {json.dumps({'state': task.state, 'status': str(task.info)})}\n\n"
+                break
+            sleep(5)
+
+        # Once task is complete
+        yield f"data: {json.dumps({'state': 'SUCCESS', 'status': 'Task completed'})}\n\n"
+
+    return Response(stream_with_context(generate(task_id)), content_type='text/event-stream')
+
+# Polling technique
+# @bp.route('/task-status/<task_id>')
+# def task_status(task_id):
+#     task = process_and_index_file.AsyncResult(task_id)
+#     if task.state == 'PENDING':
+#         response = {
+#             'state': task.state,
+#             'status': 'Pending...'
+#         }
+#     elif task.state != 'FAILURE':
+#         response = {
+#             'state': task.state,
+#             'current': task.info.get('current', 0),
+#             'total': task.info.get('total', 1),
+#             'status': task.info.get('status', '')
+#         }
+#         if 'result' in task.info:
+#             response['result'] = task.info['result']
+#     else:
+#         # something went wrong in the background job
+#         response = {
+#             'state': task.state,
+#             'status': str(task.info),  # this is the exception raised
+#         }
+#     return jsonify(response)
+
+
+# @bp.route('/index', methods=['POST'])
+# def index_file():
+#     current_app.logger.info("About to index file...")
+#     # Attempt to get JSON data from the request
+#     data = request.get_json()
+#     if not data:
+#         return jsonify({"error": "Invalid JSON data"}), 400
+
+#     # Validate the JSON payload
+#     required_fields = ['split_size', 'index', 'file']
+#     missing_fields = [field for field in required_fields if field not in data]
+#     if missing_fields:
+#         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
+    
+#     # Validate data types and values
+#     try:
+#         split_size = int(data['split_size'])
+#         if split_size <= 0:
+#             raise ValueError("split_size must be greater than 0")
+#     except (ValueError, TypeError):
+#         return jsonify({"error": "Invalid 'split_size', must be a positive integer"}), 400
+
+#     index = data['index']
+#     file_name = data['file']
+
+#     if not isinstance(index, str) or not isinstance(file_name, str):
+#         return jsonify({"error": "Invalid 'index' or 'file', must be strings"}), 400
+
+#     try:
+#         success, file_contents_bytes = get_file_from_s3(file_name)
+#         if not success:
+#             return jsonify({"error": "An error occurred while downloading files from s3."}), 500
+#         file_content = process_file_content(file_contents_bytes, file_name)
+#         # file_content = import_text_from_file(file_contents_bytes)
+#         print(file_content)
+#         chunks = parsing.parse_text(file_content, split_size)
+#         generated_embeddings = embeddings.perform_embedding(chunks)
+#         success = indexing.index_data(generated_embeddings, index)
+
+#         if success:
+#             return jsonify({"success": "Data uploaded and indexed successfully"}), 200
+#         else:
+#             return jsonify({"failure": "Unable to index data due to unexpected error"}), 500
+#     except Exception as e:
+#         current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
+#         return jsonify({"error": "Sorry, an error occurred while processing data"}), 500
+
 @bp.route('/index', methods=['POST'])
 def index_file():
     current_app.logger.info("About to index file...")
@@ -63,7 +168,7 @@ def index_file():
     missing_fields = [field for field in required_fields if field not in data]
     if missing_fields:
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
-    
+
     # Validate data types and values
     try:
         split_size = int(data['split_size'])
@@ -78,24 +183,10 @@ def index_file():
     if not isinstance(index, str) or not isinstance(file_name, str):
         return jsonify({"error": "Invalid 'index' or 'file', must be strings"}), 400
 
-    try:
-        success, file_contents_bytes = get_file_from_s3(file_name)
-        if not success:
-            return jsonify({"error": "An error occurred while downloading files from s3."}), 500
-        file_content = process_file_content(file_contents_bytes, file_name)
-        # file_content = import_text_from_file(file_contents_bytes)
-        print(file_content)
-        chunks = parsing.parse_text(file_content, split_size)
-        generated_embeddings = embeddings.perform_embedding(chunks)
-        success = indexing.index_data(generated_embeddings, index)
+    task = tasks.process_and_index_file.delay(data)
 
-        if success:
-            return jsonify({"success": "Data uploaded and indexed successfully"}), 200
-        else:
-            return jsonify({"failure": "Unable to index data due to unexpected error"}), 500
-    except Exception as e:
-        current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
-        return jsonify({"error": "Sorry, an error occurred while processing data"}), 500
+    return jsonify({"message": "Task started", "task_id": str(task.id)}), 202
+
 
 @bp.route("/get-files", methods=["GET"])
 def get_files():

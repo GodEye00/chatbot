@@ -1,29 +1,12 @@
-import csv
-import threading
-from flask import current_app, copy_current_request_context
+from flask import current_app
 
 from ..utils import chunking, formatter, write_to_file
-
-# docs_path_dir = '../utils/extracted_pages'
-# texts = read_files.import_text_from_directory(docs_path_dir)
-
-file_name = 'output'
 
 def parse_text(text, size):
     current_app.logger.info("About to start parsing text")
     try:
         passages = chunking.transformer_based_chunking(text)
         formatted_chunks = formatter.split_flatten_and_join(passages, size)
-        
-        @copy_current_request_context
-        def thread_function():
-            try:
-                write_to_file.write(formatted_chunks, 'csv', file_name, ['Passage'])
-            except Exception as e:
-                current_app.logger.exception(f"An error occurred while writing embeddings to CSV. Error: {e}")
-
-        thread = threading.Thread(target=thread_function)
-        thread.start()
 
         return formatted_chunks
     except Exception as e:

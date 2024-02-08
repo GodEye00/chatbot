@@ -1,10 +1,15 @@
 {
     "cSpell.words": [
+        "aioredis",
         "boto",
         "botocore",
         "chardet",
+        "eventlet",
+        "Fernet",
         "jsonify",
+        "setex",
         "streamlit",
+        "summerizing",
         "wtforms"
     ]
 }

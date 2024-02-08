@@ -1,23 +1,28 @@
+
+import eventlet
+eventlet.monkey_patch()
+
 from flask import Flask
+from celery import Celery
+import redis
 from flask_socketio import SocketIO
 from flask_cors import CORS
 # from flask_wtf import CSRFProtect
 import logging
 from logging.handlers import RotatingFileHandler
 import os
+from flask_caching import Cache
+
 
 from .config import Config
 
-app = Flask(__name__)
-
-app = Flask(__name__)
-CORS(app)
-# app.config['WTF_CSRF_TIME_LIMIT'] = 1800
-# CSRFProtect(app)
-
-socketio = SocketIO(app, cors_allowed_origins="*")
-
 LOG_FILE = 'app.log'
+
+
+app = Flask(__name__)
+celery = Celery(__name__, include=['app.services.tasks'])
+socketio = SocketIO(app, message_queue='redis://localhost:6379/0', cors_allowed_origins="*")
+
 
 def create_app(event):
     # Create a rotating file handler which logs even debug messages
@@ -33,8 +38,25 @@ def create_app(event):
     event.logger.setLevel(logging.INFO)
     event.logger.info('Flask application startup')
     event.config.from_object(Config)
+    
+    CORS(app)
+    # CSRFProtect(app)
+    
+    # redis_client = redis.StrictRedis(
+    #     host=app.config['REDIS_HOST'],
+    #     port=app.config['REDIS_PORT'],
+    #     db=app.config['REDIS_DB']
+    # )
+
+    redis_url = event.config['CACHE_REDIS_URL']
+    r = redis.Redis.from_url(redis_url)
+    app.redis = r
+    
+    cache = Cache(app)
+    app.cache = cache
 
     socketio.init_app(event)
+    make_celery(event)
 
     from . import routes
     event.register_blueprint(routes.bp)
@@ -43,6 +65,26 @@ def create_app(event):
 
     return events
 
+
+def make_celery(app):
+    """
+    Configure the Celery application to work within the Flask application context.
+    """
+    # Directly load configurations from the Flask app to Celery
+    celery.config_from_object(app.config, namespace='CELERY')
+    celery.conf.broker_connection_retry_on_startup = True
+    # celery.conf.update({
+    #     'worker_pool': 'eventlet'
+    # })
+    # Optional: Use Flask application context in Celery tasks
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+
+    return celery
 
 runner = create_app(app)
 

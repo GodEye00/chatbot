@@ -1,3 +1,4 @@
+import uuid
 from elasticsearch import Elasticsearch, helpers
 from flask import current_app
 import pandas as pd
@@ -33,6 +34,7 @@ def process_row(row, es_index):
         if not isinstance(embedding, list):
             raise ValueError("Invalid format for embedding")
         return {
+            "_id": str(uuid.uuid4()),
             "_index": es_index,
             "_source": {
                 "Passage": row['Passage'],
@@ -46,7 +48,7 @@ def process_row(row, es_index):
 # Preparing the passage_metadata for indexing purposes
 index = "search-chatbot-final"
 def index_data(data, es_index=index, mapping=mapping):
-    current_app.logger.info("About to start indexing data")
+    current_app.logger.info("About to start bulk indexing data")
     indexing_data = []
     try:
         if isinstance(data, pd.DataFrame):
@@ -70,3 +72,19 @@ def index_data(data, es_index=index, mapping=mapping):
     except Exception as e:  # Catching broader exceptions for robust error handling
         current_app.logger.exception(f"Error during indexing: {e}")
         return False
+    
+    
+def index_data_append(data, es_index=index, mapping=mapping):
+    current_app.logger.info("About to start single indexing data")
+    try:
+        if not es.indices.exists(index=es_index):
+            es.indices.create(index=es_index, body=mapping)
+        document = process_row(data, es_index)
+        if document:
+            es.index(index=es_index, body=document['_source'], id=document['_id'])
+        current_app.logger.info("Successfully indexed data")
+        return True
+    except Exception as e:
+        current_app.logger.exception(f"Error during indexing: {e}")
+        return False
+

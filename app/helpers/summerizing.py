@@ -1,7 +1,7 @@
 from transformers import pipeline, T5Tokenizer, T5ForConditionalGeneration
 from flask import current_app
 
-def summarize_conversation(conversation_array, max_length=4096, summary_model="sshleifer/distilbart-cnn-12-6"):
+def summarize_conversation(conversation_array, max_length=8192, summary_model="sshleifer/distilbart-cnn-12-6"):
     current_app.logger.info("About to summarize conversation")
     """
     Summarize the conversation if it exceeds max_length.
@@ -15,7 +15,11 @@ def summarize_conversation(conversation_array, max_length=4096, summary_model="s
     - str: Original or summarized conversation.
     """
     # Concatenate the conversation
-    concatenated_conversation = " ".join([msg["content"] for msg in conversation_array])
+    # concatenated_conversation = " ".join([msg["content"] for msg in conversation_array])
+    concatenated_conversation = " ".join([
+        msg["content"] if isinstance(msg["content"], str) else msg["content"]["response"]["content"]
+        for msg in conversation_array
+    ])
 
     # Check if conversation exceeds the max_length
     if len(concatenated_conversation) > max_length:
@@ -33,9 +37,14 @@ def summarize_conversation(conversation_array, max_length=4096, summary_model="s
 
 
 
-def summarize_conversation_t5(conversation_array, max_length=2048, model_name="t5-base"):
+def summarize_conversation_t5(conversation_array, max_length=8192, model_name="t5-base"):
+    current_app.logger.info(f"Conversation history in summarization: {conversation_array}")
     try:
-        concatenated_conversation = " ".join([msg["content"] for msg in conversation_array])
+        # concatenated_conversation = " ".join([msg["content"] for msg in conversation_array])
+        concatenated_conversation = " ".join([
+                msg if isinstance(msg, str) else msg["content"] if isinstance(msg["content"], str) else msg["content"]["response"]["content"]
+                for msg in conversation_array
+            ])
         
         if len(concatenated_conversation) > max_length:
             tokenizer = T5Tokenizer.from_pretrained(model_name)
@@ -52,4 +61,23 @@ def summarize_conversation_t5(conversation_array, max_length=2048, model_name="t
     except Exception as e:
         current_app.logger.exception(f"An error occurred while summarizing the conversation. Error: {e}")
         return Exception
+
+
+def summary(type, conversation):
+        method = {
+            't5': summarize_conversation_t5,
+            'norm': summarize_conversation
+        }
+        summarized_text = method[type](conversation)
+        if summarized_text:
+            return [
+                        {"role": "system", "content": "You're 'Romeo,' the IT Consortium chatbot, here to answer "+
+                                                    " questions about our services. You'll get more info denoted by 'Context:' for "+
+                                                        "better replies. Use a friendly tone. For greetings like 'Hi/What's up/Yo'"+
+                                                        "respond as if starting fresh: Without Context. "+
+                                                        "Ignore 'Context:' for greetings. If unsure about names, ask for clarity."},
+                        summarized_text
+                        ]
+        return conversation
+        
 
