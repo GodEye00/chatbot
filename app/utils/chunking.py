@@ -90,7 +90,7 @@ def transformer_based_chunking(text, max_length=512):
             for chunk in token_chunks:
                 # Converting tokens to their IDs and pad if necessary
                 encoded_chunk = tokenizer.convert_tokens_to_ids(chunk)
-                encoded_chunk = torch.tensor([encoded_chunk])  # Convert to PyTorch tensors
+                encoded_chunk = torch.tensor([encoded_chunk])
                 with torch.no_grad():  # Inference mode
                     output = model(encoded_chunk)
                     hidden_states = output.last_hidden_state

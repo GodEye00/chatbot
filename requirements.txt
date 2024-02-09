@@ -22,5 +22,4 @@ flask-cors
 boto3
 celery
 redis
-Flask-Caching
 cryptography

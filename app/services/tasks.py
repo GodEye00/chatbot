@@ -1,10 +1,7 @@
 from celery.exceptions import MaxRetriesExceededError
 
-from ..app import socketio
-from flask import current_app
 from ..utils import aws, read_files, write_to_file, redis
 from ..helpers import embeddings, indexing, parsing, model, summerizing, retrieval
-from ..app import celery
 from ..app import celery, socketio
 from ..gpt import ask_bedrock, ask_openai
 
@@ -120,28 +117,24 @@ def process_message_with_model(self, user_conversations, conversation_id, model_
     Task to process a message with a specified model.
     """
     try:
-        switcher = {
-            "gpt4": {
-                "model_name": model_name,
-                "response": ask_openai('gpt-4', user_conversations)
-            },
-            "gpt3.5": {
-                "model_name": model_name,
-                "response": ask_openai('gpt-3.5-turbo', user_conversations)
-            },
-            "anthropic": {
-                "model_name": model_name,
-                "response": ask_bedrock('anthropic.claude-v2', user_conversations)
-            }
-        }
-        response = switcher.get(model_name, {'model_name': model_name, 'response': 'Model not supported'})
-        conversations = user_conversations + [response['response']]
+        def switcher(model):
+            if model == 'gpt4':
+                return ask_openai("gpt-4", user_conversations)
+            elif model == "gpt3.5":
+                return ask_openai("gpt-3.5-turbo", user_conversations)
+            elif model == "anthropic":
+                return ask_bedrock("anthropic.claude-v2", user_conversations)
+            else:
+                return  "Model not supported"
+
+        response = switcher(model_name)
+        conversations = user_conversations + [response]
         # Emit that the model has finished processing ("not typing")
         socketio.emit('typing_indicator', {'status': False, 'model': model_name}, room=conversation_id)
 
         # Emit the response from the model
-        socketio.emit('model_response', {'model': model_name, 'content': response['response']['content'] if isinstance(response, dict) and response and 'response' in response and 'content' in response['response'] else response['response']}, room=conversation_id)
-        
+        socketio.emit('model_response', {'model': model_name, 'content': response}, room=conversation_id)
+
         update_conversation_history_task.apply_async(args=[conversations, conversation_id, response, True, model_name])
 
         return response

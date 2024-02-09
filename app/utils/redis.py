@@ -36,7 +36,6 @@ def get_decrypted_conversation(prefix):
     conversations_dict = {}
 
     keys = current_app.redis.scan_iter(f"{prefix}*")
-    current_app.logger.info(f"KEY ARE: {keys}")
     for key in keys:
         key_str = key.decode('utf-8') if isinstance(key, bytes) else key
 

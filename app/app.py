@@ -11,7 +11,6 @@ from flask_cors import CORS
 import logging
 from logging.handlers import RotatingFileHandler
 import os
-from flask_caching import Cache
 
 
 from .config import Config
@@ -21,7 +20,7 @@ LOG_FILE = 'app.log'
 
 app = Flask(__name__)
 celery = Celery(__name__, include=['app.services.tasks'])
-socketio = SocketIO(app, message_queue='redis://localhost:6379/0', cors_allowed_origins="*")
+socketio = SocketIO(app, message_queue=os.environ.get('CACHE_REDIS_URL'), cors_allowed_origins="*")
 
 
 def create_app(event):
@@ -41,19 +40,10 @@ def create_app(event):
     
     CORS(app)
     # CSRFProtect(app)
-    
-    # redis_client = redis.StrictRedis(
-    #     host=app.config['REDIS_HOST'],
-    #     port=app.config['REDIS_PORT'],
-    #     db=app.config['REDIS_DB']
-    # )
 
     redis_url = event.config['CACHE_REDIS_URL']
     r = redis.Redis.from_url(redis_url)
     app.redis = r
-    
-    cache = Cache(app)
-    app.cache = cache
 
     socketio.init_app(event)
     make_celery(event)
@@ -73,6 +63,7 @@ def make_celery(app):
     # Directly load configurations from the Flask app to Celery
     celery.config_from_object(app.config, namespace='CELERY')
     celery.conf.broker_connection_retry_on_startup = True
+    celery.conf.result_expires = 3600 # Tasks delete after 1hr
     # celery.conf.update({
     #     'worker_pool': 'eventlet'
     # })

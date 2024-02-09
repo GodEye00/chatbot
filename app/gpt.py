@@ -19,8 +19,8 @@ def ask_openai(model, conversations):
         response_to_send = {"role": "assistant", "content": response_text}
         return response_to_send
     except Exception as e:
-        current_app.logger.error(f"Error in GPT-4 API call: {e}")
-        return "I'm having trouble understanding that right now."
+        current_app.logger.error(f"Error in {model} GPT API call: {e}")
+        raise Exception(f"Error in {model} GPT API call: {e}")
 
 
 def ask_bedrock(model, conversations):
@@ -66,8 +66,8 @@ def ask_bedrock(model, conversations):
         response_to_send = {"role": "assistant", "content": response}
         return response_to_send
     except Exception as e:
-        print(f"Error invoking model: {e}")
-        return None
+        current_app.logger.error(f"Error in {model} GPT API call: {e}")
+        raise Exception(f"Error in {model} GPT API call: {e}")
 
 
 # Function to replace specified keys

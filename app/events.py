@@ -1,6 +1,6 @@
-from celery import chain, group, chord
+from celery import group, chord
 from flask_socketio import emit, join_room
-from flask import request, copy_current_request_context, current_app
+from flask import request, current_app
 
 from .app import socketio
 from .services.tasks import retrieve_conversation_from_cache, retrieve_passages_task, process_and_emit, delete_conversation_from_cache

@@ -39,28 +39,18 @@ Before running the application, ensure you have the following installed:
 Export the necessary environment variables as per your `Config` class setup:
 
 ```bash
-export ELASTICSEARCH_HOST=localhost
-export ELASTICSEARCH_INDEX=your-elastic-search-index
-export ELASTICSEARCH_PORT=9200
-export ELASTICSEARCH_CLOUD_ID=your-cloud-id
-export ELASTICSEARCH_API_KEY=your_api_key
-export SECRET_KEY=you-will-never-guess
-export OPENAI_API_KEY=your_open_ai_key
-export CELERY_BROKER_URL=your_celery_broker_url
-export CELERY_RESULT_BACKEND=your_result_backend
-export REDIS_CHANNEL=your_redis_channel
-export REDIS_HOST=localhost
-export REDIS_PORT=6379
-export REDIS_DB=your_redis_db
-export AWS_ACCESS_KEY_ID=your_aws_access_key_id
-export AWS_SECRET_ACCESS_KEY=your_aws_secret_access_key
-export AWS_REGION=your_aws_region
-export WTF_CSRF_TIME_LIMIT=1800
-export CACHE_TYPE=RedisCache
-export CACHE_REDIS_URL=redis://localhost:6379/0
-export REDIS_EXPIRY=3600
-export REDIS_KEY=your_redis_key
-...
+export ELASTICSEARCH_CLOUD_ID='your-cloud-id'
+export ELASTICSEARCH_API_KEY='your-elasticsearch-api-key'
+export OPENAI_API_KEY='your-open-ai-key'
+export CELERY_BROKER_URL='your-celery-broker-url'
+export CELERY_RESULT_BACKEND='your-celery-result-backend-url'
+export AWS_ACCESS_KEY_ID='your-aws-access-key-id'
+export AWS_SECRET_ACCESS_KEY='your-aws-secret-access-key'
+export AWS_REGION='eu-west-1'
+export WTF_CSRF_TIME_LIMIT='1800'
+export CACHE_REDIS_URL='redis://localhost:6379/0'
+export REDIS_EXPIRY='3600'
+export REDIS_KEY='your-redis-key'
 ```
 
 ## Running the Application
