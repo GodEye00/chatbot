@@ -3,4 +3,5 @@ logs
 .vscode
 .DS_Store
 configs.txt
-app/utils/extracted_pages
+*.pyc
+app.utils.extracted_pages

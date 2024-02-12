@@ -5,12 +5,13 @@ from gensim.corpora.dictionary import Dictionary
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
-from transformers import AutoTokenizer, AutoModel, BertTokenizer, BertModel
+from transformers import BertTokenizer, BertModel
 from sklearn.cluster import KMeans
 import torch
 import nltk
 from nltk.corpus import stopwords
 from nltk.tokenize import word_tokenize
+import numpy as np
 
 
 # Function for topic-aware chunking
@@ -77,48 +78,57 @@ def topic_aware_chunking(text, threshold=0.1):
     # xlnet-base-cased
     # bert-large-uncased
 def transformer_based_chunking(text, max_length=512):
-        try:
-            model_name = "bert-base-uncased"
-            tokenizer = BertTokenizer.from_pretrained(model_name)
-            model = BertModel.from_pretrained(model_name)
+    try:
+        model_name = "bert-base-uncased"
+        tokenizer = BertTokenizer.from_pretrained(model_name)
+        model = BertModel.from_pretrained(model_name)
 
-            # Splitting the text into tokens and then into chunks of max_length tokens
-            tokenized_text = tokenizer.tokenize(text)
-            token_chunks = [tokenized_text[i:i + max_length] for i in range(0, len(tokenized_text), max_length)]
+        # Splitting the text into tokens and then into chunks of max_length tokens
+        tokenized_text = tokenizer.tokenize(text)
+        token_chunks = [tokenized_text[i:i + max_length] for i in range(0, len(tokenized_text), max_length)]
 
-            sentence_embeddings = []
-            for chunk in token_chunks:
-                # Converting tokens to their IDs and pad if necessary
-                encoded_chunk = tokenizer.convert_tokens_to_ids(chunk)
-                encoded_chunk = torch.tensor([encoded_chunk])
-                with torch.no_grad():  # Inference mode
-                    output = model(encoded_chunk)
-                    hidden_states = output.last_hidden_state
-                    # Extracting embeddings (e.g., mean pooling)
-                    sentence_embedding = torch.mean(hidden_states, dim=1).squeeze()
-                    sentence_embeddings.append(sentence_embedding.numpy())
-        except Exception as e:
-            current_app.logger.exception("An error occurred while performing tokenizations and sentence groupings.")
-            raise Exception("An error occurred while performing tokenizations and sentence groupings")
-        try:
-            # Applying clustering (KMeans example)
-            clusters = KMeans(n_clusters=5).fit(sentence_embeddings).labels_
+        sentence_embeddings = []
+        for chunk in token_chunks:
+            # Converting tokens to their IDs and pad if necessary
+            encoded_chunk = tokenizer.convert_tokens_to_ids(chunk)
+            encoded_chunk = torch.tensor([encoded_chunk])
+            with torch.no_grad():  # Inference mode
+                output = model(encoded_chunk)
+                hidden_states = output.last_hidden_state
+                # Extracting embeddings (e.g., mean pooling)
+                sentence_embedding = torch.mean(hidden_states, dim=1).squeeze()
+                sentence_embeddings.append(sentence_embedding.numpy())
+    except Exception as e:
+        current_app.logger.exception("An error occurred while performing tokenizations and sentence groupings.")
+        raise Exception("An error occurred while performing tokenizations and sentence groupings")
 
-            # Reconstructing chunks based on clustering
-            chunks = []
-            current_chunk = []
-            for chunk, cluster in zip(token_chunks, clusters):
-                sentences = nltk.sent_tokenize(tokenizer.convert_tokens_to_string(chunk))
-                if not current_chunk or cluster != clusters[-1]:
-                    if current_chunk:
-                        chunks.append(current_chunk)
-                    current_chunk = sentences
-                else:
-                    current_chunk.extend(sentences)
-            if current_chunk:
-                chunks.append(current_chunk)  # Append last chunk
+    if not sentence_embeddings:
+        return []
 
-            return chunks
-        except Exception as e:
-            current_app.logger.error(f"An error occurred while chunking sentences: Error: {e}")
-            raise Exception("An error occurred while chunking sentences")
+    try:
+        n_clusters = min(len(sentence_embeddings), 5)
+
+        if n_clusters > 1:
+            clusters = KMeans(n_clusters=n_clusters).fit(sentence_embeddings).labels_
+        else:
+            clusters = np.zeros(len(sentence_embeddings), dtype=int)  # Assign all to the same cluster
+
+        # Reconstructing chunks based on clustering
+        chunks = []
+        current_chunk = []
+        for chunk, cluster in zip(token_chunks, clusters):
+            sentences = nltk.sent_tokenize(tokenizer.convert_tokens_to_string(chunk))
+            if not current_chunk or cluster != clusters[-1]:
+                if current_chunk:
+                    chunks.append(' '.join(current_chunk))
+                current_chunk = sentences
+            else:
+                current_chunk.extend(sentences)
+        if current_chunk:
+            chunks.append(' '.join(current_chunk))  # Append last chunk
+
+        return chunks
+    except Exception as e:
+        current_app.logger.error(f"An error occurred while chunking sentences: Error: {e}")
+        raise Exception("An error occurred while chunking sentences")
+

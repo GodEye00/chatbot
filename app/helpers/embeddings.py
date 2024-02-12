@@ -41,8 +41,8 @@ def perform_embedding(passage):
     except Exception as e:
         current_app.logger.exception(f"An error occurred while obtaining embeddings for passages. Error{e}")
         raise Exception("An error occurred while obtaining embeddings")
-    
-    
+
+
 def perform_embedding_single(passage):
     current_app.logger.info("About to start performing embedding for single passage")
     try:

@@ -4,6 +4,7 @@ from ..utils import chunking, formatter, write_to_file
 
 def parse_text(text, size):
     current_app.logger.info("About to start parsing text")
+    current_app.logger.info(f"Text is: {text}")
     try:
         passages = chunking.transformer_based_chunking(text)
         formatted_chunks = formatter.split_flatten_and_join(passages, size)

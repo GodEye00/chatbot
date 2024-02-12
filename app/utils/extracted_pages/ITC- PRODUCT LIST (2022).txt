@@ -1,0 +1,143 @@
+﻿Our Products/Services
+TransFlow Payment Ecosystem 
+TransFlow®, our flagship product, is a payments ecosystem that links financial institutions and mobile money operators to merchants and their customers across Africa. We provide end to end integration between billers and a variety of customer touch-points (bank, mobile, cards, ATMs, POS, etc).  This delivers real time engagement with customers by providing agile payment solutions that are easy to use. ITC acts as an aggregator for Mobile Network Operators (MNOs) using its TransFlow Biller Middleware. ITC is a major Aggregator for MTN Ghana and other MNOs (Vodafone, Airtel/Tigo) in Ghana and Liberia.
+
+
+In the banks, Transflow® combines the knowledge-base and workflow of merchants to assist in capturing payments and provides the payment data as feedback into the workflow to run subsequent processes. The TransFlow Payment Ecosystem is currently linked to more than eighteen (18) Banks in Ghana. 
+
+
+TransFlow is currently the single largest aggregation platform in Ghana, averaging transactional values of approximately USD10 Million a month.
+
+
+The TransFlow payment ecosystem has over 10 solutions; some of which are Y’ello Save, Utilities, eVoucher (application form), School Fees collection, Remittances, Mobile Banking, TransAssure, Mobile Teller, Hospital Bill Collections, Push & Pull (Wallet and Account), MDAs, General Payment, UniWallet API, Debit Order. 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Solutions
+	
+
+Description
+	General Payment
+
+
+	A lot of merchants have been given this product to handle payment by their clients. Through General Payment buyers are able to pay for goods and services instantly using their mobile wallet. Any service provider can be put on General Payment. Settlement is done for merchant in 24 hours to move e-cash to merchant’s account by the bank. The convenience this product gives to the end users increases their desire to do more business on the platform. Banks are encouraged to lobby merchants in order to hold their account as funds that may be left in the accounts for weeks depending on the type of merchant.
+	Bill 
+Payments
+	This solution grants customers the ability to pay for Electricity, Water, Multichoice (i.e. DStv, GoTV, Box Office) and Startimes bills using either the Banks or the Mobile Money platform.
+Payers are connected automatically, especially in the case of Multichoice and Startimes if their accounts were disconnected previously.        
+	School Fees
+	School fees, hostel fees, Resit fees, Medical Exams Fees and any other school related payments are processed on TransFlow. Parents/guardians and students have the convenience of paying with the preferred channel (i.e Bank or the Mobile Money platform) whilst the appropriate officers in the school receive the payment information within minutes, to carry on with the provision of student services. 
+Reconciliation is made easy as the payment are lodged into institution’s account with payer specific narrations. This solution is a key selling point for relationship managers of the bank who seek to have schools as clients. School authorities are more comfortable using TransFlow through a bank as they are assured of accurate narrations leading to quick and clean reconciliation. 
+	Mobile Banking
+	Mobile Banking solution brings to customers the convenience of being able to perform a defined set of banking operations from their mobile phones, and since it runs on USSD, this does not discriminate the type of phone a customer owns. The service does not require internet, neither does it require a smartphone. All customers anywhere can access the service even with the simplest of phones.
+
+
+The functionalities include:
+* Statement request
+* Cheque book request
+* Stop cheque
+* Balance enquiry request
+* Fund transfer service (move funds from one account to the other (same or different bank), )
+* Bill payments (pay bills as DSTV, GoTv, Boxoffice, School fees etc)
+* Account opening initiation
+* Airtime vending (all networks)
+* Internet Banking request
+* Account initiation
+* Block visa card
+* Mobile Money Push and Pull
+* Recurring Payments
+	USSD Applications (Savings and Investments)
+	The USSD Savings and Investments solutions allow subscribers of the Mobile Money service to have a savings or an investment account using their mobile wallet. 
+Using our Recurring Mandate feature, funds are deducted from customer’s mobile wallet within predefined schedules (i.e. daily, weekly or monthly).
+Some of these solutions are:
+* Yello Save for Fidelity Bank and MTN Ghana 
+* My Own Pensions for United Pensions Trustees and MTN Ghana.
+* Bank In My Palm for Christian Community Microfinance Limited.
+	Hospital Bill Collections  
+
+
+	This is deployed for banks to do collections at various points in hospitals. A Collector/Cashier accesses the system which is departmentalised with billing items. Generated bills are paid by patients and the appropriate offices access relevant reports. Records of transactions are uploaded into TransFlow Bank to enhance reconciliation. The offline collection ability of the solution makes it even possible for cashiers to do collection when network access is off. With this feature all funds are collected, increasing the amount of monies to be mobilized by the bank daily.  
+	Bank Assurance
+	Is an arrangement in which a bank and an insurance company form a partnership so that the insurance company can sell its products to the bank's client base. Banks can also pay claims made by customers of the insurance company. 
+	                 Mobile Teller Solution
+
+
+                                        
+                                
+                        
+                
+
+
+	This solution enables the bank’s teller to perform banking services at the doorstep of the customer. The teller’s interaction with the mobile device communicates in realtime to the bank’s core banking systems over a secure private network connection. All operations/functions are performed in the bank making the mobile device just a terminal depending entirely on the bank for its logic.  This gives the bank realtime remote access to each teller in the field and advance data on all their activities. Each teller is armed with a phone or tablet and a wireless printer and optionally a capacitive stylus pen. With this solution, customers are saved from the ordeal of closing their businesses to travel to the bank for deposits and the bank is able to mop up funds that might have not been deposited at the bank.  
+The features/functionalities of this solution include:
+* Account opening
+* Disbursements
+* Bill payments 
+* Deposits
+	MDAs
+	The Ghana Immigration Service uses the system to collect all fees (permits and penalties). The sale of passport forms are available on this platform in selected banks. The use of TransFlow to serve MDAs has enhanced the portfolio of such TransFlow Enabled banks in the sight of the government. Banks that have performed well have been awarded other government projects such as hospital collections among others.                                         
+	eVoucher
+	The e-Voucher solution on our payment channel enables IT Consortium to sell admission application form vouchers on our payment platform. It enables applicants to use the paid application form voucher to apply for admissions in realtime on the institution’s websites.  
+
+
+This solution can be used separately for institutions with an existing online application form. Institutions under this service include The Ghana Police Service, Ministry of foreign Affairs & Regional Integration, Ministry of Health Training Institutions, University of Ghana, University of Education, Winneba etc.
+
+
+	Nuna
+	Nuna (a short form of “Nunana” meaning gift in Ewe) is a platform that enables donors to contribute to organizations using the mobile money platform. Within a set number of days of receipt of collected donations, the funds are settled to the designated organization (donee). 
+
+
+	Mobile Agric (M-Agric)
+	The mAgric platform is a mobile-based service that enables the digitisation of the entire procurement process in the agricultural final stage. The mAgric service supports farmer registration and mobile money payments from agribusinesses (i.e. License Buying Companies, District Officers and Purchasing Clerks) to farmers, as well as data analytics and monitoring for agribusinesses. By digitising the value chain payments via mobile money, this solution serves as an entry point for financial inclusion for unbanked farmers.
+ 
+The mAgric platform acts as a funds allocation service that aids in the allocation of funds from License Buying Companies (LBCs) to District Officers and to Purchasing Clerks. The allocation of funds is done in bags.
+	TransFuel 
+	TransFuel is a platform designed to enable companies, associations, co-operations, member groups etc to allocate funds to individuals who can in turn make fuel purchases at partner OMC filling stations. 
+	Retail Payment (RP)
+	A solution that enables retail shops to receive Mobile Money payments from their customers in such a way that payments can be tagged as actual bills for goods or services. 
+	TransBiller 
+	Transbiller is a bulk billing platform designed to provide mass distribution and payment of bills for corporate organizations.
+	TransPay
+	TransPay is a payment ecosystem that aids payment between customers, merchants and channel providers in Ghana. It is a product of TransFlow used for bulk payments using MNOs, GhIPSS Instant Pay and ACH payment methods. TransPay integrates these payments methods to make bulk payments easier and faster to any of these channels (i.e. Mobile or Bank).
+	International Remittances
+	This solution allows foreign remittances terminated to  mobile wallets and bank accounts. Relatives and/or related parties abroad can transfer funds safely to recipients' mobile phones anywhere and anytime. The solution also allows senders to transfer funds to recipients' bank accounts and funds hit account instantly. This solution offers an instant, safe and convenient way of sending and receiving funds, bringing financial inclusion to all.
+	TransFlow Standing Orders
+	The TransFlow Standing Orders (TSO) is a solution, which enables institutions to create standing orders on customers' accounts using the Mobile Money service. The standing order (mandate) is an automated recurring payment set up by the institution for payment by the customer. The customer is expected to approve an initial one-off mandate, using his/her mobile phone. Subsequent payments by the customer are automated. An approved mandate takes effect immediately and will continue till the mandate expires (ends). The organization manages the frequency and amount expected to be paid by the customer.    
+ 
+The solution can be used for the payment of insurance premium, high-purchases, lay-by purchases, repayment of loans etc. The payment by mobile can be done in an easy, customer friendly and verifiable format. The service is interactive, simple to use yet instructive. This is aimed at ensuring that users face minimal challenges in its operation. The service can be run on the simplest of phones (no need for a smartphone).
+	________________
+School Management Solutions
+
+
+Solutions
+	
+
+Description
+	OSIS
+	This is a student management system deployed for higher institutions to manage students throughout the student’s life cycle. The modules in OSIS include Admissions, Registration, Score Processing, Student Financials, Document Generation, Student ID Generation and Broadsheet Generation for graduating classes.
+
+
+Students may be allowed to do registration on their own or assisted, lecturers enters assignment and exams scores into the system by themselves, the finance office raises student bills and sees all payments made by students at TransFlow channels. Students are granted access to student services once they make payment of fees. The institution has the ability to generate ID cards for their students and also introductory letters. Various broadsheets are generated to help academic boards do detailed analysis for graduating classes. 
+	Ghana Admissions
+	Ghana Admissions is a web application designed to enable applicants apply to an institution by filling and submitting electronic forms on the Internet. Prospective students are presented with a simple intuitive interface that can easily be learned by anyone qualified to enter the institution.
+Ghana Admissions is online thus prospective applicants anywhere in the world can complete and submit their forms on time.
+Completed forms are submitted to the institution with full details of the applicants. Coupled with this is the Admissions Processor that the institution uses to capture and process submitted applications. Ghana Admissions resides on the Internet and is available 24 hours a day, 7 days a week, year round.
