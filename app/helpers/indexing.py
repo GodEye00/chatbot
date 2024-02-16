@@ -1,5 +1,5 @@
 import uuid
-from elasticsearch import Elasticsearch, helpers
+from elasticsearch import Elasticsearch, helpers, NotFoundError
 from flask import current_app
 import pandas as pd
 import ast
@@ -87,4 +87,19 @@ def index_data_append(data, es_index=index, mapping=mapping):
     except Exception as e:
         current_app.logger.exception(f"Error during indexing: {e}")
         return False
+
+
+def delete_index(es_index):
+    current_app.logger.info(f"About to delete index {index}")
+    try:
+        es.indices.delete(index=es_index)
+        current_app(f"Index {es_index} has been deleted.")
+        return True, f"Successfully deleted index {es_index}."
+    except NotFoundError:
+        current_app(f"Index {es_index} does not exist or has already been deleted. Operation ignored.")
+        return False, f"Index {es_index} does not exist or has already been deleted."
+    except Exception as e:
+        current_app.logger.exception(f"Error during deletion. Error: {e}")
+        raise Exception(f"An error occurred during the deletion. Error: {e}")
+
 

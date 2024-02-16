@@ -13,10 +13,9 @@ def process_and_index_file(self, data):
         split_size = int(data['split_size'])
         index = data['index']
 
-        # Attempt to get file content from S3
+        # Attempting to get file content from S3
         success, file_contents_bytes = aws.get_file_from_s3(file_name)
         if not success:
-            # If not successful, retry or raise an exception
             raise Exception("Failed to download file from S3")
 
         file_content = read_files.process_file_content(file_contents_bytes, file_name)
@@ -24,8 +23,6 @@ def process_and_index_file(self, data):
 
         total_chunks = len(chunks)
         for i, chunk in enumerate(chunks, start=1):
-            # Simulate processing each chunk
-            # Remove unnecessary sleep if you're performing real operations
             generated_embeddings = embeddings.perform_embedding_single(chunk)
             success = indexing.index_data_append(generated_embeddings, index)
             if not success:
@@ -34,7 +31,6 @@ def process_and_index_file(self, data):
             # Call write_file task for each chunk's embeddings
             # write_file.delay(generated_embeddings, 'csv', f'output_emb_{i}', headers=['Passage'])
 
-            # Update task progress
             self.update_state(state='PROGRESS', meta={'current': i, 'total': total_chunks, 'status': 'Processing'})
 
         return {'current': 100, 'total': 100, 'status': 'Task completed', 'result': 'Successfully indexed data'}

@@ -6,7 +6,7 @@ from time import sleep
 
 from app.utils.Flask_form import S3UploadForm, UploadForm
 from .utils.read_files import import_text_from_file, process_uploaded_file, process_file_content
-from .utils.aws import upload_file_to_s3, get_file_from_s3, list_files_in_folder
+from .utils.aws import upload_file_to_s3, get_file_from_s3, list_files_in_folder, delete_from_s3
 from .helpers import parsing, indexing, embeddings
 from .services import tasks
 
@@ -45,7 +45,8 @@ def upload_to_s3():
     form = S3UploadForm()
     if form.validate_on_submit():
         file = form.data.data
-        success, message = upload_file_to_s3(file)
+        folder_name = form.folder_name.data
+        success, message = upload_file_to_s3(file, folder_name)
         if not success:
             return jsonify({"failure": message}), 500
         return jsonify({"success": message}), 200
@@ -56,13 +57,13 @@ def upload_to_s3():
 
 @bp.route('/task-status/<task_id>', methods=['GET'])
 def task_status(task_id):
-    current_app.logger.info("Getting tasks status for task " + task_id)
+    current_app.logger.info(f"Getting tasks status for task: {task_id} ")
     def generate(task_id):
         # Simulate getting task status
         task = tasks.process_and_index_file.AsyncResult(task_id)
         while task.state not in ['SUCCESS', 'FAILURE']:
-            sleep(1)  # Simulate a delay
-            task = tasks.process_and_index_file.AsyncResult(task_id)  # Refresh task status
+            sleep(1)
+            task = tasks.process_and_index_file.AsyncResult(task_id)
             if task.state == 'PENDING':
                 yield f"data: {json.dumps({'state': task.state, 'status': 'Pending...'})}\n\n"
             elif task.state != 'FAILURE':
@@ -164,7 +165,7 @@ def index_file():
         return jsonify({"error": "Invalid JSON data"}), 400
 
     # Validate the JSON payload
-    required_fields = ['split_size', 'index', 'file']
+    required_fields = ['split_size', 'file']
     missing_fields = [field for field in required_fields if field not in data]
     if missing_fields:
         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
@@ -177,8 +178,8 @@ def index_file():
     except (ValueError, TypeError):
         return jsonify({"error": "Invalid 'split_size', must be a positive integer"}), 400
 
-    index = data['index']
     file_name = data['file']
+    index = data.get('index', file_name)
 
     if not isinstance(index, str) or not isinstance(file_name, str):
         return jsonify({"error": "Invalid 'index' or 'file', must be strings"}), 400
@@ -188,7 +189,7 @@ def index_file():
     return jsonify({"message": "Task started", "task_id": str(task.id)}), 202
 
 
-@bp.route("/get-files", methods=["GET"])
+@bp.route("/files", methods=["GET"])
 def get_files():
     current_app.logger.info("Getting files...")
     try:
@@ -201,8 +202,48 @@ def get_files():
     except Exception as e:
         current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
         return jsonify({"error": "Sorry, an error occurred while getting files from s3"}), 500
-    
-    
+
+
+@bp.route("/files", methods=["DELETE"])
+def delete_files():
+    current_app.logger.info("About to delete file")
+    body = request.get_json()
+    print(f"Body is {body}")
+    file_name = body.get('file', '')
+    if not file_name:
+        return jsonify({"error": "file is required"}), 400
+    try:
+        success, message = delete_from_s3(file_name)
+        if success:
+            current_app.logger.info(message)
+            return jsonify({f"success": message}), 200
+        else:
+            current_app.logger.info(f"Could not delete file {file_name} from s3.")
+            return jsonify({"error": f"Could not delete file {file_name} from s3."}), 500
+    except Exception as e:
+        current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
+        return jsonify({"error": "Sorry, an error occurred while deleting file from s3."}), 500
+
+
+@bp.route("/index", methods=["DELETE"])
+def delete_index():
+    current_app.logger.info("About to delete index")
+    body = request.get_json()
+    print(f"Body is {body}")
+    index_name = body.get('index', '')
+    if not index_name:
+        return jsonify({"error": "index is required"}), 400
+    try:
+        success, message = indexing.delete_index(index_name)
+        if success:
+            current_app.logger.info(message)
+            return jsonify({f"success": message}), 200
+        else:
+            current_app.logger.info(f"Could not delete index {index_name} from elasticsearch.")
+            return jsonify({"error": message}), 500
+    except Exception as e:
+        current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
+        return jsonify({"error": "Sorry, an error occurred while deleting index from elasticsearch."}), 500
 
 @bp.route("/get-csrf-token", methods=["GET"])
 def get_csrf_token():

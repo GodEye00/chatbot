@@ -6,6 +6,8 @@ from flask import current_app
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
+from helpers.indexing import delete_index
+
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
 region_name = os.getenv('AWS_REGION')
@@ -15,19 +17,14 @@ session = boto3.Session(
         aws_access_key_id=aws_access_key_id,
         aws_secret_access_key=aws_secret_access_key
     )
+bucket_name = "itc-agent"
+object_name = "chatbot-files/"
 
-
-import base64
-import os
-from botocore.exceptions import NoCredentialsError, ClientError
-from flask import current_app
-
-def upload_file_to_s3(file):
+def upload_file_to_s3(file, object_name=object_name):
     """
-    Encode a file-like object to Base64 and upload it to an S3 bucket into a specified folder.
+    Encode a file-like object to Base64 and upload it to an S3 bucket into a specified or provided folder.
     If the bucket does not exist, it is created.
     """
-    bucket_name = 'itc-agent'
 
     try:
         current_app.logger.info(f"Uploading file: {file.filename} to S3 bucket")
@@ -38,7 +35,6 @@ def upload_file_to_s3(file):
         if extension.lower() not in allowed_extensions:
             return False, f"File {filename} has an unsupported extension. Skipping."
 
-        object_name = f"chatbot-files/{filename}"
 
         s3_client = session.client('s3')
 
@@ -61,8 +57,6 @@ def upload_file_to_s3(file):
                 return False, f"S3 Connectivity check failed. Error: {e}"
 
         file.seek(0)
-        # file_content = file.read()
-        # encoded_content = base64.b64encode(file_content)
 
         current_app.logger.info('About to finally upload file to S3')
         response = s3_client.put_object(Bucket=bucket_name, Key=object_name, Body=file)
@@ -87,22 +81,19 @@ def list_files_in_folder():
     List files in a specified folder of an S3 bucket.
     """
     current_app.logger.info("Listing files in folder 'chatbot-files'")
-    bucket_name = 'itc-agent'
 
 
     try:
         s3_client = session.client('s3')
-        folder_name = 'chatbot-files/'
         file_list = []
         paginator = s3_client.get_paginator('list_objects_v2')
-        pages = paginator.paginate(Bucket=bucket_name, Prefix=folder_name)
+        pages = paginator.paginate(Bucket=bucket_name)
 
         for page in pages:
             if 'Contents' in page:
                 for item in page['Contents']:
                     file_path = item['Key']
-                    file_name = file_path.replace(folder_name, '')
-                    file_list.append(file_name)
+                    file_list.append(file_path)
         return True, file_list
     except NoCredentialsError:
         current_app.logger.exception("Credentials not available")
@@ -117,21 +108,24 @@ def list_files_in_folder():
 
 
 
-
 def get_file_from_s3(file_name):
     """
-    Retrieve a file from a specified folder in an S3 bucket.
+    Retrieve files from an S3 bucket based on the specified parameters.
+    :param file_name: The name of the file, 'all' to retrieve all files in the bucket, or specific file name.
+    :param is_folder: The folder name within the S3 bucket to retrieve files from.
     """
-    current_app.logger.info("About to download file from s3 for indexing")
-    bucket_name = "itc-agent"
-    
+    is_folder=False
+
     try:
         s3_client = session.client('s3')
-        object_key = "chatbot-files/" + file_name
+
+        if not file_name.startswith(object_name):
+            is_folder = True
 
         if file_name.lower() == 'all':
+            # Retrieve all files in the bucket.
             paginator = s3_client.get_paginator('list_objects_v2')
-            page_iterator = paginator.paginate(Bucket=bucket_name, Prefix=object_key)
+            page_iterator = paginator.paginate(Bucket=bucket_name)
             files_content = {}
             for page in page_iterator:
                 if 'Contents' in page:
@@ -140,9 +134,23 @@ def get_file_from_s3(file_name):
                         files_content[obj['Key']] = file_content
             return True, files_content
         else:
-            response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
-            file_content = response['Body'].read()
-            return True, file_content
+            if is_folder:
+                # Retrieving all files in the specified folder.
+                object_key = (file_name if file_name.endswith('/') else file_name + '/')
+                paginator = s3_client.get_paginator('list_objects_v2')
+                page_iterator = paginator.paginate(Bucket=bucket_name, Prefix=object_key)
+                files_content = {}
+                for page in page_iterator:
+                    if 'Contents' in page:
+                        for obj in page['Contents']:
+                            file_content = s3_client.get_object(Bucket=bucket_name, Key=obj['Key'])['Body'].read()
+                            files_content[obj['Key']] = file_content
+                return True, files_content if files_content else (False, "No files found in the specified folder")
+            else:
+                object_key = file_name
+                response = s3_client.get_object(Bucket=bucket_name, Key=object_key)
+                file_content = response['Body'].read()
+                return True, file_content
     except NoCredentialsError:
         return False, "Error retrieving file. Credentials not available"
     except ClientError as e:
@@ -151,8 +159,58 @@ def get_file_from_s3(file_name):
     except Exception as e:
         return False, f"Unexpected error: {str(e)}"
 
-    
-    
-    
+
+
+
+
+def delete_from_s3(file_name):
+    """
+    Deletes a file or all files within a folder from an S3 bucket.
+
+    :param file_name: The key of the file or the prefix of the folder to delete.
+    """
+    is_folder = False
+
+    try:
+
+        if not file_name.startswith(file_name):
+            is_folder = True
+
+        s3_client = session.client('s3')
+        if is_folder:
+            paginator = s3_client.get_paginator('list_objects_v2')
+            page_iterator = paginator.paginate(Bucket=bucket_name, Prefix=file_name)
+
+            objects_to_delete = []
+            for page in page_iterator:
+                if 'Contents' in page:
+                    for obj in page['Contents']:
+                        objects_to_delete.append({'Key': obj['Key']})
+
+            if objects_to_delete:
+                s3_client.delete_objects(
+                    Bucket=bucket_name,
+                    Delete={
+                        'Objects': objects_to_delete,
+                        'Quiet': True
+                    }
+                )
+            return True, "Folder and its contents deleted successfully."
+        else:
+            success, message = delete_index(file_name)
+            if success:
+                s3_client.delete_object(Bucket=bucket_name, Key=file_name)
+                return True, "File deleted successfully."
+            else:
+                return False, message
+    except ClientError as e:
+        error_msg = e.response['Error']['Message']
+        current_app.logger.error(f'A client error occurred while deleting object; {error_msg}')
+        return False, f"Error deleting object: {error_msg}"
+    except Exception as e:
+        current_app.logger.exception(f"Exception while trying to delete file from s3. Error: {e}")
+        return False, f"Unexpected error: {str(e)}"
+
+
 
 
