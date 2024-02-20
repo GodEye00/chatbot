@@ -77,7 +77,7 @@ The application features a chat system where users can send messages and receive
 - `/upload-s3`: Upload documents to S3 for later indexing.
 - `/index`: Index uploaded files.
 - `/task-status/<task_id>`: Keep track of the status of task submitted for indexing.
-- `/get-files`: Retrieve all uploaded files in the S3 bucket.
+- `/files`: Retrieve all uploaded files in the S3 bucket.
 - `/get-csrf-token`: Get a CSRF token for form uploads.
 
 ### WebSocket Listeners and Events

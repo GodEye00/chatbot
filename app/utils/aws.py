@@ -6,7 +6,7 @@ from flask import current_app
 import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 
-from helpers.indexing import delete_index
+from ..helpers.indexing import delete_index
 
 aws_access_key_id = os.getenv('AWS_ACCESS_KEY_ID')
 aws_secret_access_key = os.getenv('AWS_SECRET_ACCESS_KEY')
