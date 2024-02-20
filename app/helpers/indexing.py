@@ -93,11 +93,11 @@ def delete_index(es_index):
     current_app.logger.info(f"About to delete index {index}")
     try:
         es.indices.delete(index=es_index)
-        current_app(f"Index {es_index} has been deleted.")
+        current_app.logger.info(f"Index {es_index} has been deleted.")
         return True, f"Successfully deleted index {es_index}."
     except NotFoundError:
-        current_app(f"Index {es_index} does not exist or has already been deleted. Operation ignored.")
-        return False, f"Index {es_index} does not exist or has already been deleted."
+        current_app.logger.info(f"Index {es_index} does not exist or has already been deleted. Operation ignored.")
+        return True, f"Index {es_index} does not exist or has already been deleted."
     except Exception as e:
         current_app.logger.exception(f"Error during deletion. Error: {e}")
         raise Exception(f"An error occurred during the deletion. Error: {e}")

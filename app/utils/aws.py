@@ -172,37 +172,37 @@ def delete_from_s3(file_name):
     is_folder = False
 
     try:
+        folder_name = file_name.rstrip('/*') if file_name.endswith('/*') else file_name
+        success, message = delete_index(folder_name)
+        if success:
+            if not file_name.startswith(object_name) and file_name.endswith('/*'):
+                is_folder = True
 
-        if not file_name.startswith(object_name) and file_name.endswith('/*'):
-            is_folder = True
+            s3_client = session.client('s3')
+            if is_folder:
+                paginator = s3_client.get_paginator('list_objects_v2')
+                page_iterator = paginator.paginate(Bucket=bucket_name, Prefix=file_name)
 
-        s3_client = session.client('s3')
-        if is_folder:
-            paginator = s3_client.get_paginator('list_objects_v2')
-            page_iterator = paginator.paginate(Bucket=bucket_name, Prefix=file_name)
+                objects_to_delete = []
+                for page in page_iterator:
+                    if 'Contents' in page:
+                        for obj in page['Contents']:
+                            objects_to_delete.append({'Key': obj['Key']})
 
-            objects_to_delete = []
-            for page in page_iterator:
-                if 'Contents' in page:
-                    for obj in page['Contents']:
-                        objects_to_delete.append({'Key': obj['Key']})
-
-            if objects_to_delete:
-                s3_client.delete_objects(
-                    Bucket=bucket_name,
-                    Delete={
-                        'Objects': objects_to_delete,
-                        'Quiet': True
-                    }
-                )
-            return True, "Folder and its contents deleted successfully."
-        else:
-            success, message = delete_index(file_name)
-            if success:
+                if objects_to_delete:
+                    s3_client.delete_objects(
+                        Bucket=bucket_name,
+                        Delete={
+                            'Objects': objects_to_delete,
+                            'Quiet': True
+                        }
+                    )
+                return True, "Folder and its contents deleted successfully."
+            else:
                 s3_client.delete_object(Bucket=bucket_name, Key=file_name)
                 return True, "File deleted successfully."
-            else:
-                return False, message
+        else:
+            return False, f"{message}. Therefore could not delete {file_name}."
     except ClientError as e:
         error_msg = e.response['Error']['Message']
         current_app.logger.error(f'A client error occurred while deleting object; {error_msg}')
