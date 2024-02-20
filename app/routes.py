@@ -225,28 +225,28 @@ def delete_files():
         return jsonify({"error": "Sorry, an error occurred while deleting file from s3."}), 500
 
 
-@bp.route("/index", methods=["DELETE"])
-def delete_index():
-    current_app.logger.info("About to delete index")
-    body = request.get_json()
-    print(f"Body is {body}")
-    index_name = body.get('index', '')
-    if not index_name:
-        return jsonify({"error": "index is required"}), 400
-    try:
-        success, message = indexing.delete_index(index_name)
-        if success:
-            current_app.logger.info(message)
-            return jsonify({f"success": message}), 200
-        else:
-            current_app.logger.info(f"Could not delete index {index_name} from elasticsearch.")
-            return jsonify({"error": message}), 500
-    except Exception as e:
-        current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
-        return jsonify({"error": "Sorry, an error occurred while deleting index from elasticsearch."}), 500
+# @bp.route("/index", methods=["DELETE"])
+# def delete_index():
+#     current_app.logger.info("About to delete index")
+#     body = request.get_json()
+#     print(f"Body is {body}")
+#     index_name = body.get('index', '')
+#     if not index_name:
+#         return jsonify({"error": "index is required"}), 400
+#     try:
+#         success, message = indexing.delete_index(index_name)
+#         if success:
+#             current_app.logger.info(message)
+#             return jsonify({f"success": message}), 200
+#         else:
+#             current_app.logger.info(f"Could not delete index {index_name} from elasticsearch.")
+#             return jsonify({"error": message}), 500
+#     except Exception as e:
+#         current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
+#         return jsonify({"error": "Sorry, an error occurred while deleting index from elasticsearch."}), 500
 
-@bp.route("/get-csrf-token", methods=["GET"])
-def get_csrf_token():
-    current_app.logger.info("Getting CSRF token")
-    return jsonify({'csrf_token': generate_csrf()}), 200
+# @bp.route("/get-csrf-token", methods=["GET"])
+# def get_csrf_token():
+#     current_app.logger.info("Getting CSRF token")
+#     return jsonify({'csrf_token': generate_csrf()}), 200
 
