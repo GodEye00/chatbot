@@ -173,7 +173,7 @@ def delete_from_s3(file_name):
 
     try:
 
-        if not file_name.startswith(file_name):
+        if not file_name.startswith(object_name) and file_name.endswith('/*'):
             is_folder = True
 
         s3_client = session.client('s3')
