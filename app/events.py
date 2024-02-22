@@ -126,7 +126,7 @@ def handle_client_message(json):
     conversation_id = get_user_from_session()
     user_message = json['message']
     models = json.get('models', ['gpt4'])
-    index = json.get('index', 'search-chatbot-final')
+    index = json.get('index', 'search-chatbot-final').replace('/', '-')
     size = json.get('size', 2)
 
     initiate_retrieval_and_processing(conversation_id, index, size, user_message, models)

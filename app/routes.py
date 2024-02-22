@@ -179,10 +179,12 @@ def index_file():
         return jsonify({"error": "Invalid 'split_size', must be a positive integer"}), 400
 
     file_name = data['file']
-    index = data.get('index', file_name)
 
-    if not isinstance(index, str) or not isinstance(file_name, str):
+    if not isinstance(file_name, str):
         return jsonify({"error": "Invalid 'index' or 'file', must be strings"}), 400
+
+    data['index'] = data.get('index', file_name).replace('/', '-')
+    print("Data is", data)
 
     task = tasks.process_and_index_file.delay(data)
 
@@ -209,7 +211,7 @@ def delete_files():
     current_app.logger.info("About to delete file")
     body = request.get_json()
     print(f"Body is {body}")
-    file_name = body.get('file', '')
+    file_name = body.get('file', '').replace('/', '-')
     if not file_name:
         return jsonify({"error": "file is required"}), 400
     try:

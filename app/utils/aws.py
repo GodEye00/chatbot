@@ -18,16 +18,16 @@ session = boto3.Session(
         aws_secret_access_key=aws_secret_access_key
     )
 bucket_name = "itc-agent"
-object_name = "chatbot-files/"
+default_object_name = "chatbot-files/"
 
-def upload_file_to_s3(file, object_name=object_name):
+def upload_file_to_s3(file, object_name):
     """
-    Encode a file-like object to Base64 and upload it to an S3 bucket into a specified or provided folder.
+    Encode a file-like object to Base64 and upload it to an S3 bucket into a specified or provided object_name.
     If the bucket does not exist, it is created.
     """
 
     try:
-        current_app.logger.info(f"Uploading file: {file.filename} to S3 bucket")
+        current_app.logger.info(f"Uploading file: {file.filename} to S3 bucket and object name is {object_name}")
 
         allowed_extensions = ['.pdf', '.txt', '.docx', '.zip']
         filename = file.filename
@@ -35,6 +35,8 @@ def upload_file_to_s3(file, object_name=object_name):
         if extension.lower() not in allowed_extensions:
             return False, f"File {filename} has an unsupported extension. Skipping."
 
+        if not object_name:
+            object_name = default_object_name
 
         s3_client = session.client('s3')
 
@@ -59,9 +61,10 @@ def upload_file_to_s3(file, object_name=object_name):
         file.seek(0)
 
         current_app.logger.info('About to finally upload file to S3')
-        response = s3_client.put_object(Bucket=bucket_name, Key=object_name, Body=file)
+        object_key = object_name + filename
+        response = s3_client.put_object(Bucket=bucket_name, Key=object_key, Body=file)
         current_app.logger.info(f"Upload file to S3 successfully. Response: {response}")
-        return True, f"File {filename} encoded and uploaded to {bucket_name}/{object_name} in Base64 format"
+        return True, f"File {filename} encoded and uploaded to {object_key}."
     except NoCredentialsError as e:
         current_app.logger.exception("Error uploading file. Credentials not available: {e}")
         return False, "Error uploading file. Credentials not available"
@@ -119,7 +122,7 @@ def get_file_from_s3(file_name):
     try:
         s3_client = session.client('s3')
 
-        if not file_name.startswith(object_name):
+        if not file_name.startswith(default_object_name):
             is_folder = True
 
         if file_name.lower() == 'all':
@@ -175,7 +178,7 @@ def delete_from_s3(file_name):
         folder_name = file_name.rstrip('/*') if file_name.endswith('/*') else file_name
         success, message = delete_index(folder_name)
         if success:
-            if not file_name.startswith(object_name) and file_name.endswith('/*'):
+            if not file_name.startswith(default_object_name) and file_name.endswith('/*'):
                 is_folder = True
 
             s3_client = session.client('s3')

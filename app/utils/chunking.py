@@ -120,12 +120,12 @@ def transformer_based_chunking(text, max_length=512):
             sentences = nltk.sent_tokenize(tokenizer.convert_tokens_to_string(chunk))
             if not current_chunk or cluster != clusters[-1]:
                 if current_chunk:
-                    chunks.append(' '.join(current_chunk))
+                    chunks.append(current_chunk)
                 current_chunk = sentences
             else:
                 current_chunk.extend(sentences)
         if current_chunk:
-            chunks.append(' '.join(current_chunk))  # Append last chunk
+            chunks.append(current_chunk)
 
         return chunks
     except Exception as e:

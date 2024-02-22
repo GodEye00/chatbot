@@ -1,12 +1,12 @@
 from celery.exceptions import MaxRetriesExceededError
-
+from flask import current_app
 from ..utils import aws, read_files, write_to_file, redis
 from ..helpers import embeddings, indexing, parsing, model, summerizing, retrieval
 from ..app import celery, socketio
 from ..gpt import ask_bedrock, ask_openai
 
 
-@celery.task(bind=True, max_retries=3, default_retry_delay=5)
+@celery.task(bind=True)
 def process_and_index_file(self, data):
     try:
         file_name = data['file']
@@ -26,19 +26,14 @@ def process_and_index_file(self, data):
             generated_embeddings = embeddings.perform_embedding_single(chunk)
             success = indexing.index_data_append(generated_embeddings, index)
             if not success:
-                raise Exception("Failed to index data")
-
-            # Call write_file task for each chunk's embeddings
-            # write_file.delay(generated_embeddings, 'csv', f'output_emb_{i}', headers=['Passage'])
+                current_app.logger.error("Failed to index data")
 
             self.update_state(state='PROGRESS', meta={'current': i, 'total': total_chunks, 'status': 'Processing'})
 
         return {'current': 100, 'total': 100, 'status': 'Task completed', 'result': 'Successfully indexed data'}
     except Exception as e:
-        try:
-            self.retry(exc=e)
-        except MaxRetriesExceededError:
-            return self.update_state(state='FAILURE', meta={'current': i, 'total': total_chunks, 'status': 'Error'})
+        current_app.logger.exception(f"An error occurred while processing and indexing file. Error: {e}")
+        self.update_state(state='FAILURE', meta={'current': i, 'total': total_chunks, 'status': 'Error'})
 
 
 @celery.task(bind=True, max_retries=3, default_retry_delay=5)
