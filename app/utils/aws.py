@@ -61,7 +61,7 @@ def upload_file_to_s3(file, object_name):
         file.seek(0)
 
         current_app.logger.info('About to finally upload file to S3')
-        object_key = object_name + filename
+        object_key = (object_name if object_name.endswith('/') else object_name + '/') + filename
         response = s3_client.put_object(Bucket=bucket_name, Key=object_key, Body=file)
         current_app.logger.info(f"Upload file to S3 successfully. Response: {response}")
         return True, f"File {filename} encoded and uploaded to {object_key}."

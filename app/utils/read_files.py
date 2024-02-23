@@ -152,7 +152,7 @@ def process_file_content(file_content, filename):
                 pdf_text = [page.extract_text() for page in pdf_reader.pages if page.extract_text()]
                 file_contents = ' '.join(pdf_text).strip()
         except Exception as e:
-            print(f"Error reading PDF file: {e}")
+            current_app.logger.exception(f"Error reading PDF file: {e}")
     elif filename.endswith('.docx'):
         # Handle DOCX files
         try:
@@ -160,7 +160,7 @@ def process_file_content(file_content, filename):
             docx_text = ' '.join(paragraph.text for paragraph in doc.paragraphs)
             file_contents = re.sub(r'\n+', ' ', docx_text).strip()
         except Exception as e:
-            print(f"Error reading DOCX file: {e}")
+            current_app.logger.exception(f"Error reading DOCX file: {e}")
     elif filename.endswith('.zip'):
         # Handle ZIP files directly from binary content
         try:
@@ -202,12 +202,10 @@ def process_file_content(file_content, filename):
                                 file_contents += content
 
         except Exception as e:
-            print(f"Error processing ZIP file: {e}")
+            current_app.logger.exception(f"Error processing ZIP file: {e}")
     else:
-        print("Unsupported file type for " + filename)
-    if len(file_contents) > 0:
-        return file_contents.strip()
-    else:
-        raise Exception("File content is empty")
+        current_app.logger.error("Unsupported file type for " + filename)
+    return file_contents.strip()
+
 
 

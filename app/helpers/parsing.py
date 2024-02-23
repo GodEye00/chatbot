@@ -10,5 +10,5 @@ def parse_text(text, size):
         return formatted_chunks
     except Exception as e:
         current_app.logger.exception(f"An error occurred while parsing file(s): Error: {e}")
-        raise Exception("An error occurred while parsing file(s)")
+        raise Exception("An error occurred while parsing file(s)") from e
 

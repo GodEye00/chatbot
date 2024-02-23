@@ -19,6 +19,8 @@ def process_and_index_file(self, data):
             raise Exception("Failed to download file from S3")
 
         file_content = read_files.process_file_content(file_contents_bytes, file_name)
+        if not file_content:
+            return {'current': 0, 'total': 0, 'status': 'Task not started', 'result': 'No text to index'}
         chunks = parsing.parse_text(file_content, split_size)
 
         total_chunks = len(chunks)
@@ -33,7 +35,7 @@ def process_and_index_file(self, data):
         return {'current': 100, 'total': 100, 'status': 'Task completed', 'result': 'Successfully indexed data'}
     except Exception as e:
         current_app.logger.exception(f"An error occurred while processing and indexing file. Error: {e}")
-        self.update_state(state='FAILURE', meta={'current': i, 'total': total_chunks, 'status': 'Error'})
+        self.update_state(state='FAILURE', meta={'status': 'Error'})
 
 
 @celery.task(bind=True, max_retries=3, default_retry_delay=5)
