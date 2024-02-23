@@ -205,6 +205,7 @@ def delete_from_s3(file_name):
                 s3_client.delete_object(Bucket=bucket_name, Key=file_name)
                 return True, "File deleted successfully."
         else:
+            current_app.logger.info(f"Not deleting file with key {file_name} in bucket {bucket_name} since an error occurred while deleting file index.")
             return False, f"{message}. Therefore could not delete {file_name}."
     except ClientError as e:
         error_msg = e.response['Error']['Message']
