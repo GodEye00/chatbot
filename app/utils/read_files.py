@@ -1,5 +1,4 @@
 from flask import current_app
-import PyPDF2
 import os
 import re
 import zipfile
@@ -129,83 +128,67 @@ def process_uploaded_file(file):
         return file_contents
     else:
         raise Exception("File content is empty")
-    
-    
-    
-def process_file_content(file_content, filename):
-    """
-    Process file content based on the extension and return the text.
-    Supports .txt, .pdf, .docx, and .zip containing these file types.
-    """
-    file_contents = ''
 
-    if filename.endswith('.txt'):
-        # Handle TXT files
-        detected_encoding = chardet.detect(file_content)['encoding']
-        text = file_content.decode(detected_encoding)
-        file_contents = re.sub(r'\n+', ' ', text).strip()
-    elif filename.endswith('.pdf'):
-        # Handle PDF files
-        try:
-            with io.BytesIO(file_content) as pdf_file:
-                pdf_reader = PyPDF2.PdfReader(pdf_file)
-                pdf_text = [page.extract_text() for page in pdf_reader.pages if page.extract_text()]
-                file_contents = ' '.join(pdf_text).strip()
-        except Exception as e:
-            current_app.logger.exception(f"Error reading PDF file: {e}")
-    elif filename.endswith('.docx'):
-        # Handle DOCX files
-        try:
-            doc = Document(BytesIO(file_content))
-            docx_text = ' '.join(paragraph.text for paragraph in doc.paragraphs)
-            file_contents = re.sub(r'\n+', ' ', docx_text).strip()
-        except Exception as e:
-            current_app.logger.exception(f"Error reading DOCX file: {e}")
-    elif filename.endswith('.zip'):
-        # Handle ZIP files directly from binary content
-        try:
-            with io.BytesIO(file_content) as zip_bio:
-                with zipfile.ZipFile(zip_bio) as zip_ref:
-                    for file_info in zip_ref.infolist():
-                        if file_info.filename.startswith('__MACOSX') or file_info.filename.endswith('.DS_Store'):
-                            continue  # Skip this metadata file
-                        with zip_ref.open(file_info.filename) as extracted_file:
-                            extracted_file_content = extracted_file.read()
-                            # Recursively process each file within the ZIP
-                            # file_contents += process_file_content(extracted_file_content, file_info.filename) + '\n'
-                            if filename.lower().endswith('.pdf'):
-                                try:
-                                    pdf_memory_file = BytesIO(extracted_file_content)
-                                    pdf_reader = PyPDF2.PdfReader(pdf_memory_file)
-                                    pdf_text = ""
-                                    for page in pdf_reader.pages:
-                                        pdf_text += page.extract_text() + " "
-                                    pdf_text = re.sub(r'\n+', ' ', pdf_text)
-                                    file_contents += pdf_text.strip()
-                                except Exception as e:
-                                    current_app.logger.error(f"Error reading PDF file {filename} in ZIP: {e}")
-                                    continue  # Skip this file
-                            else:
-                                # For non-PDF files inside the ZIP
-                                byte_content = extracted_file_content
-                                detected_encoding = chardet.detect(byte_content)['encoding']
-                                if detected_encoding:
-                                    try:
-                                        content = byte_content.decode(detected_encoding)
-                                    except UnicodeDecodeError:
-                                        current_app.logger.exception(f"Could not decode {filename} with detected encoding {detected_encoding}")
-                                        continue  # Skip this file
-                                else:
-                                    current_app.logger.error(f"Could not detect encoding for {filename}")
-                                    continue  # Skip this file
-                                content = re.sub(r'\n+', ' ', content)
-                                file_contents += content
 
-        except Exception as e:
-            current_app.logger.exception(f"Error processing ZIP file: {e}")
+
+def process_file_content(file_content, filename=None):
+    """
+    Process file content based on the file extension and return the text.
+    Supports direct bytes content for .txt, .pdf, .docx files, and a dictionary of these file types.
+    :param file_content: Bytes content of the file or a dictionary containing multiple files.
+    :param filename: The name of the file. Used if file_content is bytes. Ignored if file_content is a dictionary.
+    """
+    processed_text = ''
+
+    if isinstance(file_content, dict):
+        # If file_content is a dictionary, process each file within it
+        for fname, content in file_content.items():
+            processed_text += process_single_file(content, fname) + ' '
     else:
-        current_app.logger.error("Unsupported file type for " + filename)
-    return file_contents.strip()
+        # If file_content is not a dictionary, process it as a single file's bytes content
+        processed_text = process_single_file(file_content, filename)
 
+    return processed_text.strip()
 
+def process_single_file(content, fname):
+    """
+    Process a single file's content based on its extension and return the text.
+    """
+    try:
+        if fname.endswith('.txt'):
+            detected_encoding = chardet.detect(content)['encoding']
+            text = content.decode(detected_encoding)
+            return re.sub(r'\n+', ' ', text).strip()
 
+        elif fname.endswith('.pdf'):
+            pdf_text = ''
+            with io.BytesIO(content) as pdf_file:
+                pdf_reader = PyPDF2.PdfReader(pdf_file)
+                pdf_text = ' '.join(page.extract_text() for page in pdf_reader.pages if page.extract_text())
+            return re.sub(r'\n+', ' ', pdf_text).strip()
+
+        elif fname.endswith('.docx'):
+            with io.BytesIO(content) as docx_file:
+                doc = Document(docx_file)
+                docx_text = ' '.join(paragraph.text for paragraph in doc.paragraphs)
+            return re.sub(r'\n+', ' ', docx_text).strip()
+
+        elif fname.endswith('.zip'):
+            file_contents = ''
+            with io.BytesIO(content) as zip_bio, zipfile.ZipFile(zip_bio) as zip_file:
+                for zip_info in zip_file.infolist():
+                    if not zip_info.is_dir() and zip_info.filename.endswith(('.txt', '.pdf', '.docx')):
+                        with zip_file.open(zip_info) as extracted_file:
+                            extracted_content = extracted_file.read()
+                            content = process_single_file(extracted_content, zip_info.filename)
+                            if content:
+                                file_contents += content + ' '
+            return file_contents.strip()
+
+        else:
+            current_app.logger.error(f"Unsupported file type for {fname}")
+            return ''
+
+    except Exception as e:
+        current_app.logger.exception(f"Error processing file {fname}: {str(e)}")
+        return ''

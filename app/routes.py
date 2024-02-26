@@ -2,6 +2,7 @@ from flask import render_template, request, jsonify, Blueprint, current_app,  st
 from flask_wtf.csrf import generate_csrf
 import traceback
 import json
+import re
 from time import sleep
 
 from app.utils.Flask_form import S3UploadForm, UploadForm
@@ -183,7 +184,7 @@ def index_file():
     if not isinstance(file_name, str):
         return jsonify({"error": "Invalid 'index' or 'file', must be strings"}), 400
 
-    data['index'] = data.get('index', file_name).replace('/', '-')
+    data['index'] = 'search-'+re.sub(r'[\s/]+', '-', data.get('index', file_name)).strip().lower()
     print("Data is", data)
 
     task = tasks.process_and_index_file.delay(data)
@@ -211,17 +212,18 @@ def delete_files():
     current_app.logger.info("About to delete file")
     body = request.get_json()
     print(f"Body is {body}")
-    file_name = body.get('file', '').replace('/', '-')
-    if not file_name:
+    file = body['file']
+
+    if not file:
         return jsonify({"error": "file is required"}), 400
     try:
-        success, message = delete_from_s3(file_name)
+        success, message = delete_from_s3(file)
         if success:
             current_app.logger.info(message)
             return jsonify({f"success": message}), 200
         else:
-            current_app.logger.info(f"Could not delete file {file_name} from s3.")
-            return jsonify({"error": f"Could not delete file {file_name} from s3."}), 500
+            current_app.logger.info(f"Could not delete file {file} from s3.")
+            return jsonify({"error": f"Could not delete file {file} from s3."}), 500
     except Exception as e:
         current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
         return jsonify({"error": "Sorry, an error occurred while deleting file from s3."}), 500

@@ -4,6 +4,7 @@
 import os
 from flask import current_app
 import boto3
+import re
 from botocore.exceptions import ClientError, NoCredentialsError
 
 from ..helpers.indexing import delete_index
@@ -37,6 +38,8 @@ def upload_file_to_s3(file, object_name):
 
         if not object_name:
             object_name = default_object_name
+        else:
+            object_name = object_name.strip()
 
         s3_client = session.client('s3')
 
@@ -135,9 +138,11 @@ def get_file_from_s3(file_name):
                     for obj in page['Contents']:
                         file_content = s3_client.get_object(Bucket=bucket_name, Key=obj['Key'])['Body'].read()
                         files_content[obj['Key']] = file_content
-            return True, files_content
+            return True, files_content if files_content else (False, "No files found in the specified folder")
+
         else:
             if is_folder:
+                current_app.logger.info(f'File name is: {file_name}')
                 # Retrieving all files in the specified folder.
                 object_key = (file_name if file_name.endswith('/') else file_name + '/')
                 paginator = s3_client.get_paginator('list_objects_v2')
@@ -155,34 +160,38 @@ def get_file_from_s3(file_name):
                 file_content = response['Body'].read()
                 return True, file_content
     except NoCredentialsError:
+        current_app.logger.exception(f"Got a no credentials error: {str(e)}")
         return False, "Error retrieving file. Credentials not available"
     except ClientError as e:
+        current_app.logger.exception(f"Got a client error: {str(e)}")
         error_msg = e.response['Error']['Message']
         return False, f"Error retrieving file: {error_msg}"
     except Exception as e:
+        current_app.logger.exception(f"Got an unexpected error: {str(e)}")
         return False, f"Unexpected error: {str(e)}"
 
 
 
-
-
-def delete_from_s3(file_name):
+def delete_from_s3(file):
     """
     Deletes a file or all files within a folder from an S3 bucket.
 
     :param file_name: The key of the file or the prefix of the folder to delete.
     """
     is_folder = False
+    file_name = file
+    index = 'search-'+ re.sub(r'[\s/]+', '-', str(file).strip().replace('/*', '').lower())
 
     try:
-        folder_name = file_name.rstrip('/*') if file_name.endswith('/*') else file_name
-        success, message = delete_index(folder_name)
+        success, message = delete_index(index)
         if success:
             if not file_name.startswith(default_object_name) and file_name.endswith('/*'):
+                file_name = file_name.replace('/*', '')
                 is_folder = True
 
             s3_client = session.client('s3')
             if is_folder:
+                current_app.logger.info(f"Folder name is {file_name}")
                 paginator = s3_client.get_paginator('list_objects_v2')
                 page_iterator = paginator.paginate(Bucket=bucket_name, Prefix=file_name)
 
@@ -191,7 +200,7 @@ def delete_from_s3(file_name):
                     if 'Contents' in page:
                         for obj in page['Contents']:
                             objects_to_delete.append({'Key': obj['Key']})
-
+                current_app.logger.info(f"Objects to delete is {objects_to_delete}")
                 if objects_to_delete:
                     s3_client.delete_objects(
                         Bucket=bucket_name,
@@ -200,7 +209,8 @@ def delete_from_s3(file_name):
                             'Quiet': True
                         }
                     )
-                return True, "Folder and its contents deleted successfully."
+                    return True, "Folder and its contents deleted successfully."
+                return False, "There is nothing in the folder to delete."
             else:
                 s3_client.delete_object(Bucket=bucket_name, Key=file_name)
                 return True, "File deleted successfully."
@@ -214,7 +224,6 @@ def delete_from_s3(file_name):
     except Exception as e:
         current_app.logger.exception(f"Exception while trying to delete file from s3. Error: {e}")
         return False, f"Unexpected error: {str(e)}"
-
 
 
 

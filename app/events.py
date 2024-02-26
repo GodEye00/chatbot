@@ -1,6 +1,7 @@
 from celery import group, chord
 from flask_socketio import emit, join_room
 from flask import request, current_app
+import re
 
 from .app import socketio
 from .services.tasks import retrieve_conversation_from_cache, retrieve_passages_task, process_and_emit, delete_conversation_from_cache
@@ -126,7 +127,7 @@ def handle_client_message(json):
     conversation_id = get_user_from_session()
     user_message = json['message']
     models = json.get('models', ['gpt4'])
-    index = json.get('index', 'search-chatbot-final').replace('/', '-')
+    index =  'search-'+re.sub(r'[\s/]+', '-', json.get('index', 'search-chatbot-final')).strip().lower()
     size = json.get('size', 2)
 
     initiate_retrieval_and_processing(conversation_id, index, size, user_message, models)
