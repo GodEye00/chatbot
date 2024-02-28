@@ -9,7 +9,12 @@ default_messages = [
 ]
 
 no_context = [
-    {"role": "system", "content": "You are a chatbot. Engage in a casual conversation."},
+    {"role": "system", "content": "You are a chatbot. Engage in a casual conversation."+
+                                    "Responses should be detailed, structured, and formatted"+
+                                    " in MARKDOWN for clarity. Continuously learn from interactions to"+
+                                    " improve responses, enhance user experience, and adapt to different communication styles. "+
+                                    "Ensure data privacy and security by handling sensitive information appropriately"+
+                                    " and following best practices in information protection"},
 ]
 
 conversations = {}
