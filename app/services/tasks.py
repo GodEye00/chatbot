@@ -160,11 +160,15 @@ def process_and_emit(results, conversation_id, user_message, models):
 
     for model_name in models:
 
-        conversation, [chunks, retrieved_passage] = results
+        try:
+            conversation, [chunks, retrieved_passage] = results
+        except ValueError:
+            conversation = results[0]
+            chunks = retrieved_passage = None
 
         socketio.emit(f'chunks_retrieved', {'chunks': chunks}, room=conversation_id)
 
-        user_conversations = conversation.get(model_name, model.default_messages)
+        user_conversations = conversation.get(model_name, model.default_messages) if chunks else conversation.get(model_name, model.no_context)
 
         combined_message = f"{user_message}. Context: {retrieved_passage}"
         message = {"role": "user", "content": combined_message }

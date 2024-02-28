@@ -24,7 +24,7 @@ def get_user_from_session():
     return request.sid
 
 def validate_chat_data(json):
-    required_fields = ['message', 'index', 'size']
+    required_fields = ['message']
     errors = []
     for field in required_fields:
         if field not in json or json.get(field) == None or json.get(field) == "":
@@ -106,15 +106,20 @@ def handle_connect():
 # In your Flask-SocketIO event handling file
 
 
+from celery import group, chord
+
 def initiate_retrieval_and_processing(conversation_id, index, size, user_message, models):
-    header = group(
-        retrieve_conversation_from_cache.s(conversation_id),
-        retrieve_passages_task.s(conversation_id, index, size, user_message)
-    )
+    tasks = [retrieve_conversation_from_cache.s(conversation_id)]
+
+    if index:
+        tasks.append(retrieve_passages_task.s(conversation_id, index, size, user_message))
+
+    header = group(*tasks)
 
     callback = process_and_emit.s(conversation_id=conversation_id, user_message=user_message, models=models)
 
     chord(header)(callback)
+
 
 
 @socketio.on('chat')
@@ -127,7 +132,9 @@ def handle_client_message(json):
     conversation_id = get_user_from_session()
     user_message = json['message']
     models = json.get('models', ['gpt4'])
-    index =  'search-'+re.sub(r'[\s/]+', '-', json.get('index', 'search-chatbot-final')).strip().lower()
+    index = json.get('index', '')
+    if index:
+        index =  'search-'+re.sub(r'[\s/]+', '-', index).strip().lower()
     size = json.get('size', 2)
 
     initiate_retrieval_and_processing(conversation_id, index, size, user_message, models)
