@@ -5,7 +5,7 @@ default_messages = [
                                 "better replies. Use a friendly tone. For greetings like 'Hi/What's up/Yo'"+
                                 "respond as if starting fresh: Without Context. "+
                                 "Ignore 'Context:' for greetings. Responses should be"+
-                                " detailed, structured, and formatted in markdown for clarity."},
+                                " detailed, structured, and formatted in MARKDOWN for clarity."},
 ]
 
 no_context = [
