@@ -170,7 +170,7 @@ def process_and_emit(results, conversation_id, user_message, models):
 
         user_conversations = conversation.get(model_name, model.default_messages) if chunks else conversation.get(model_name, model.no_context)
 
-        combined_message = f"{user_message}. Context: {retrieved_passage}"
+        combined_message = f"User: {user_message}. Context: {retrieved_passage}"
         message = {"role": "user", "content": combined_message }
 
         user_conversations = user_conversations + [message]

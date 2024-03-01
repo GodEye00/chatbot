@@ -180,7 +180,7 @@ def delete_from_s3(file):
     """
     is_folder = False
     file_name = file
-    index = 'search-'+ re.sub(r'[\s/]+', '-', str(file).strip().replace('/*', '').lower())
+    index = 'search-'+('-'.join(file.rsplit('/', 1)[0].split('/')) if not file.startswith('chatbot-files') and not file.endswith('/*') else re.sub(r'[\s/]+', '-', str(file).strip().replace('/*', '').lower()))
 
     try:
         success, message = delete_index(index)
