@@ -177,7 +177,7 @@ def process_single_file(content, fname):
             file_contents = ''
             with io.BytesIO(content) as zip_bio, zipfile.ZipFile(zip_bio) as zip_file:
                 for zip_info in zip_file.infolist():
-                    if not zip_info.is_dir() and zip_info.filename.endswith(('.txt', '.pdf', '.docx')):
+                    if not zip_info.is_dir() and not (zip_info.filename.startswith('__MACOSX') or zip_info.filename.endswith('.DS_Store')) and zip_info.filename.endswith(('.txt', '.pdf', '.docx')):
                         with zip_file.open(zip_info) as extracted_file:
                             extracted_content = extracted_file.read()
                             content = process_single_file(extracted_content, zip_info.filename)
