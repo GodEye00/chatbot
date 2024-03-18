@@ -60,26 +60,30 @@ def upload_to_s3():
 def task_status(task_id):
     current_app.logger.info(f"Getting tasks status for task: {task_id} ")
     def generate(task_id):
-        # Simulate getting task status
-        task = tasks.process_and_index_file.AsyncResult(task_id)
-        while task.state not in ['SUCCESS', 'FAILURE']:
-            sleep(1)
-            task = tasks.process_and_index_file.AsyncResult(task_id)
-            if task.state == 'PENDING':
-                yield f"data: {json.dumps({'state': task.state, 'status': 'Pending...'})}\n\n"
-            elif task.state != 'FAILURE':
-                progress = {'state': task.state, 'current': task.info.get('current', 0), 'total': task.info.get('total', 1), 'status': task.info.get('status', '')}
-                if 'result' in task.info:
-                    progress['result'] = task.info['result']
-                yield f"data: {json.dumps(progress)}\n\n"
-            else:
-                # Handle task failure
-                yield f"data: {json.dumps({'state': task.state, 'status': str(task.info)})}\n\n"
-                break
-            sleep(5)
+            try:
+                # Simulate getting task status
+                task = tasks.process_and_index_file.AsyncResult(task_id)
+                while task.state not in ['SUCCESS', 'FAILURE']:
+                    sleep(1)
+                    task = tasks.process_and_index_file.AsyncResult(task_id)
+                    if task.state == 'PENDING':
+                        yield f"data: {json.dumps({'state': task.state, 'status': 'Pending...'})}\n\n"
+                    elif task.state != 'FAILURE':
+                        progress = {'state': task.state, 'current': task.info.get('current', 0), 'total': task.info.get('total', 1), 'status': task.info.get('status', '')}
+                        if 'result' in task.info:
+                            progress['result'] = task.info['result']
+                        yield f"data: {json.dumps(progress)}\n\n"
+                    else:
+                        # Handle task failure
+                        yield f"data: {json.dumps({'state': task.state, 'status': str(task.info)})}\n\n"
+                        break
+                    sleep(5)
 
-        # Once task is complete
-        yield f"data: {json.dumps({'state': 'SUCCESS', 'status': 'Task completed'})}\n\n"
+                # Once task is complete
+                yield f"data: {json.dumps({'state': 'SUCCESS', 'status': 'Task completed'})}\n\n"
+            except Exception as e:
+                current_app.logger.exception(f"An exception occurred while getting tasks status. Exception: {e}")
+                yield f"data: {json.dumps({'state': 'ERROR', 'status': 'An error occurred.'})}\n\n"
 
     return Response(stream_with_context(generate(task_id)), content_type='text/event-stream')
 

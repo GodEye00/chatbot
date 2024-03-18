@@ -91,15 +91,15 @@ def write_file(self, file_data, ext, file_name, headers=None):
             return self.update_state(state='FAILURE', meta={'exc': str(e)})
 
 
-@celery.task(bind=True, max_retries=3, default_retry_delay=5)
+@celery.task(bind=True, max_retries=1, default_retry_delay=5)
 def retrieve_passages_task(self, conversation_id, index, size, user_message):
     try:
         return retrieval.retrievePassages(index, size, [user_message])
     except Exception as e:
         try:
+            socketio.emit('error', {'error': "An error occurred while retrieving passages"}, room=conversation_id)
             self.retry(exc=e)
         except MaxRetriesExceededError:
-            socketio.emit('error', {'error': "An error occurred while retrieving passages"}, room=conversation_id)
             raise Exception("Max retries exceeded for task retrieve_passages_task") from e
 
 
