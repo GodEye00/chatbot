@@ -1,0 +1,29 @@
+version: 0.2
+
+phases:
+  pre_build:
+    commands:
+      - echo "Installing dependencies"
+      - pip install -r requirements.txt
+
+  build:
+    commands:
+      - echo "Build started on `date`"
+      - echo "Exporting environment variables"
+      - export FLASK_APP=app.py
+      - export FLASK_ENV=production
+
+  post_build:
+    commands:
+      - echo "Build completed on `date`"
+
+artifacts:
+  files:
+    - app.py
+    - requirements.txt
+    - run.sh
+  discard-paths: yes
+
+cache:
+  paths:
+    - '/root/.cache/pip/**/*'
