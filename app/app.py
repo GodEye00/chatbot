@@ -67,7 +67,6 @@ def make_celery(app):
     # celery.conf.update({
     #     'worker_pool': 'eventlet'
     # })
-    # Optional: Use Flask application context in Celery tasks
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):
             with app.app_context():

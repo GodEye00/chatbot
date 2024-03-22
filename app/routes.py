@@ -87,79 +87,6 @@ def task_status(task_id):
 
     return Response(stream_with_context(generate(task_id)), content_type='text/event-stream')
 
-# Polling technique
-# @bp.route('/task-status/<task_id>')
-# def task_status(task_id):
-#     task = process_and_index_file.AsyncResult(task_id)
-#     if task.state == 'PENDING':
-#         response = {
-#             'state': task.state,
-#             'status': 'Pending...'
-#         }
-#     elif task.state != 'FAILURE':
-#         response = {
-#             'state': task.state,
-#             'current': task.info.get('current', 0),
-#             'total': task.info.get('total', 1),
-#             'status': task.info.get('status', '')
-#         }
-#         if 'result' in task.info:
-#             response['result'] = task.info['result']
-#     else:
-#         # something went wrong in the background job
-#         response = {
-#             'state': task.state,
-#             'status': str(task.info),  # this is the exception raised
-#         }
-#     return jsonify(response)
-
-
-# @bp.route('/index', methods=['POST'])
-# def index_file():
-#     current_app.logger.info("About to index file...")
-#     # Attempt to get JSON data from the request
-#     data = request.get_json()
-#     if not data:
-#         return jsonify({"error": "Invalid JSON data"}), 400
-
-#     # Validate the JSON payload
-#     required_fields = ['split_size', 'index', 'file']
-#     missing_fields = [field for field in required_fields if field not in data]
-#     if missing_fields:
-#         return jsonify({"error": f"Missing required fields: {', '.join(missing_fields)}"}), 400
-    
-#     # Validate data types and values
-#     try:
-#         split_size = int(data['split_size'])
-#         if split_size <= 0:
-#             raise ValueError("split_size must be greater than 0")
-#     except (ValueError, TypeError):
-#         return jsonify({"error": "Invalid 'split_size', must be a positive integer"}), 400
-
-#     index = data['index']
-#     file_name = data['file']
-
-#     if not isinstance(index, str) or not isinstance(file_name, str):
-#         return jsonify({"error": "Invalid 'index' or 'file', must be strings"}), 400
-
-#     try:
-#         success, file_contents_bytes = get_file_from_s3(file_name)
-#         if not success:
-#             return jsonify({"error": "An error occurred while downloading files from s3."}), 500
-#         file_content = process_file_content(file_contents_bytes, file_name)
-#         # file_content = import_text_from_file(file_contents_bytes)
-#         print(file_content)
-#         chunks = parsing.parse_text(file_content, split_size)
-#         generated_embeddings = embeddings.perform_embedding(chunks)
-#         success = indexing.index_data(generated_embeddings, index)
-
-#         if success:
-#             return jsonify({"success": "Data uploaded and indexed successfully"}), 200
-#         else:
-#             return jsonify({"failure": "Unable to index data due to unexpected error"}), 500
-#     except Exception as e:
-#         current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
-#         return jsonify({"error": "Sorry, an error occurred while processing data"}), 500
 
 @bp.route('/index', methods=['POST'])
 def index_file():
@@ -232,29 +159,4 @@ def delete_files():
         current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
         return jsonify({"error": "Sorry, an error occurred while deleting file from s3."}), 500
 
-
-# @bp.route("/index", methods=["DELETE"])
-# def delete_index():
-#     current_app.logger.info("About to delete index")
-#     body = request.get_json()
-#     print(f"Body is {body}")
-#     index_name = body.get('index', '')
-#     if not index_name:
-#         return jsonify({"error": "index is required"}), 400
-#     try:
-#         success, message = indexing.delete_index(index_name)
-#         if success:
-#             current_app.logger.info(message)
-#             return jsonify({f"success": message}), 200
-#         else:
-#             current_app.logger.info(f"Could not delete index {index_name} from elasticsearch.")
-#             return jsonify({"error": message}), 500
-#     except Exception as e:
-#         current_app.logger.exception(f"An error occurred: {traceback.format_exc()}")
-#         return jsonify({"error": "Sorry, an error occurred while deleting index from elasticsearch."}), 500
-
-# @bp.route("/get-csrf-token", methods=["GET"])
-# def get_csrf_token():
-#     current_app.logger.info("Getting CSRF token")
-#     return jsonify({'csrf_token': generate_csrf()}), 200
 

@@ -1,4 +1,4 @@
-from flask import current_app
+from quart import current_app
 
 from ..utils import chunking, formatter, write_to_file
 

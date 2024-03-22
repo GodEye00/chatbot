@@ -34,7 +34,7 @@ def retrievePassages(index, size, user_queries = user_queries):
             # Generating the embeddings for every query in the user_queries
             query_embedding = get_embedding(query)
             # query_embedding = query_embedding.cpu().detach().numpy().flatten()
-                
+
             # Searching elasticsearch for the matched passages
             body = {
                 "query": {
