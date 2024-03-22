@@ -1,6 +1,6 @@
 env
 logs
-.vscode
+.vscode/
 .DS_Store
 configs.txt
 *.pyc

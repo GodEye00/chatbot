@@ -1,6 +1,6 @@
 from flask import current_app
 
-from ..utils import chunking, formatter, write_to_file
+from ..utils import chunking, formatter
 
 def parse_text(text, size):
     current_app.logger.info("About to start parsing text")
